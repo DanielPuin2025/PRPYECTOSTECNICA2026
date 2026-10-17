@@ -22,7 +22,7 @@ const defaultDb = {
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
     { id: 'g3', title: 'Salida Pedagógica Agencia Pública de Empleo', image: 'img/salida-agencia.jpg', category: 'Salida Pedagógica' },
-    { id: 'g4', title: 'Programa Cusiana Digital SENA', image: 'img/publicidad-cusiana.jpg', category: 'Información' },
+    { id: 'g4', title: 'Programación Megacolegio Digital', image: 'img/publicidad-cusiana.jpg', category: 'Información' },
     { id: 'g5', title: 'Trabajo en equipo', image: 'img/1.jpeg', category: 'Grupos' },
     { id: 'g6', title: 'Jornada de formación', image: 'img/2.jpeg', category: 'Práctica Técnica' }
   ]
