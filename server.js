@@ -16,8 +16,100 @@ if (!ADMIN_PASSWORD) console.warn('ADVERTENCIA: define ADMIN_PASSWORD o nadie po
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+const defaultContent = {
+  header: {
+    siteTitle: 'Sustentaciones 2026 | Técnica en Programación de Software - Megacolegio El Progreso & SENA',
+    siteDescription: 'Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.',
+    schoolLogo: 'img/logo_mega_ok.png',
+    senaLogo: 'img/logo_sena_ok.png',
+    technicalLogo: 'img/logotecnicaok.jpeg',
+    kicker: 'Articulación Media',
+    programName: 'Programación de Software'
+  },
+  hero: {
+    eyebrow: 'Megacolegio El Progreso & SENA Yopal',
+    titlePrefix: 'Técnica en',
+    titleEmphasis: 'Programación de Software',
+    description: 'Crea, innova y desarrolla el futuro digital. Formamos profesionales con habilidades clave en diseño, desarrollo y pruebas de sistemas informáticos bajo metodologías ágiles en Yopal, Casanare.',
+    primaryButton: 'Ver Proyectos 21 de Octubre',
+    secondaryButton: 'Conocer Más',
+    image: 'img/publicidad-cusiana.jpg',
+    slogan: '¡Tu esfuerzo hoy, abre grandes oportunidades mañana!',
+    cardTitle: 'Programación Megacolegio Digital',
+    cardDescription: 'Articulación con la Educación Media - SENA Regional Casanare'
+  },
+  about: {
+    title: '¿De qué se trata la técnica?',
+    description: 'El Técnico en Programación de Software forma estudiantes con competencias de alta demanda en el sector tecnológico actual.',
+    features: [
+      { icon: 'fa-laptop-code', title: 'Desarrollo de Software', description: 'Aprende a diseñar, construir y desplegar aplicaciones web y de escritorio eficientes, aplicando lógica de programación y buenas prácticas de ingeniería.' },
+      { icon: 'fa-database', title: 'Bases de Datos & SQL', description: 'Gestiona y almacena información de manera segura utilizando motores de bases de datos relacionales y consultas optimizadas para sistemas robustos.' },
+      { icon: 'fa-gamepad', title: 'Videojuegos & Apps', description: 'Desarrolla tus propios proyectos interactivos y videojuegos experimentando con creatividad y lógica computacional avanzada.' }
+    ],
+    technologyTitle: 'Tecnologías y Lenguajes que Dominamos',
+    technologies: [
+      { icon: 'fa-brands fa-python text-amber-400', name: 'Python' },
+      { icon: 'fa-brands fa-java text-red-500', name: 'Java' },
+      { icon: 'fa-solid fa-code text-blue-500', name: 'C++' },
+      { icon: 'fa-solid fa-server text-sky-400', name: 'SQL / DB' },
+      { icon: 'fa-brands fa-node-js text-emerald-500', name: 'Node.js' }
+    ]
+  },
+  projects: {
+    badge: 'Evento Especial: 21 de Octubre',
+    title: 'Proyectos a Presentar',
+    description: 'Conoce los proyectos desarrollados por los estudiantes de la técnica. Haz clic en cualquier tarjeta para abrir la página de cada equipo.',
+    eventDate: '2026-10-21',
+    countdownLabel: 'Faltan para las sustentaciones',
+    countdownToday: '¡Hoy es el día de las sustentaciones!',
+    countdownDone: 'Las sustentaciones ya se realizaron. ¡Gracias por participar!',
+    countdownDays: 'Días',
+    countdownHours: 'Horas',
+    countdownMinutes: 'Min',
+    countdownSeconds: 'Seg',
+    searchPlaceholder: 'Buscar proyecto o estudiante...',
+    projectLinkLabel: 'Visitar',
+    emptyNoProjects: 'Pronto publicaremos los proyectos del 21 de octubre.',
+    emptyNoResults: 'No hay proyectos que coincidan con la búsqueda.'
+  },
+  gallery: {
+    title: 'Galería de Momentos',
+    description: 'Salidas pedagógicas, prácticas técnicas, trabajo en equipo y vivencias de nuestros grupos en el Megacolegio El Progreso y SENA Yopal.'
+  },
+  spotlight: {
+    eyebrow: 'Propuesta de identidad',
+    title: 'Un nuevo diseño para nuestra técnica',
+    description: 'Queremos incluir este nuevo diseño para la Técnica en Programación de Software del SENA, articulada con la I.E. Megacolegio El Progreso. Una identidad que representa el talento, la creatividad y el futuro digital de nuestros estudiantes.',
+    image: 'img/logotecnicaok.jpeg'
+  },
+  profile: {
+    eyebrow: 'Articulación con la Educación Media',
+    title: 'Perfil Profesional del Egresado',
+    description: 'Al finalizar el programa en el Megacolegio El Progreso con el SENA, estarás en capacidad de desempeñarte con éxito en el mundo digital y continuar tu formación superior.',
+    points: [
+      'Analizar y desarrollar software de acuerdo con las necesidades del cliente.',
+      'Implementar soluciones tecnológicas y bases de datos robustas.',
+      'Realizar pruebas de software y asegurar altos estándares de calidad.',
+      'Trabajar en equipos ágiles de desarrollo con metodologías modernas.'
+    ],
+    benefitsTitle: 'Bondades de ser Egresado SENA',
+    benefits: [
+      { title: 'Doble Titulación', description: 'Título de Bachiller Técnico y Técnico SENA simultáneamente.' },
+      { title: 'Continuidad Académica', description: 'Acceso preferencial a tecnologías y carreras profesionales universitarias.' },
+      { title: 'Mayor Empleabilidad', description: 'Conexión directa con el sector productivo y tecnológico regional y nacional.' }
+    ]
+  },
+  footer: {
+    title: 'Técnica en Programación de Software - Megacolegio El Progreso & SENA',
+    location: 'Yopal, Casanare, Colombia.',
+    copyright: '© 2026 Todos los derechos reservados.',
+    creator: 'Creador: Daniel Puin Instructor Sena'
+  }
+};
+
 const defaultDb = {
   projects: [],
+  content: defaultContent,
   gallery: [
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
@@ -31,6 +123,10 @@ const defaultDb = {
 let db;
 try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
 catch { db = defaultDb; save(); }
+if (!db.content) {
+  db.content = defaultContent;
+  save();
+}
 
 function save() {
   const tmp = DB_FILE + '.tmp';
@@ -102,6 +198,115 @@ function cleanImage(u) {
 
 const str = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 
+function normalizeContent(input) {
+  const value = input && typeof input === 'object' ? input : {};
+  const text = (section, key, max = 500) => str(value[section]?.[key] ?? defaultContent[section][key], max);
+  const image = (section, key) => cleanImage(value[section]?.[key] ?? defaultContent[section][key]) || defaultContent[section][key];
+  const date = str(value.projects?.eventDate ?? defaultContent.projects.eventDate, 10);
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(new Date(`${date}T00:00:00`).getTime())
+    && new Date(`${date}T00:00:00`).toISOString().slice(0, 10) === date ? date : defaultContent.projects.eventDate;
+  const lines = (section, key, maxItems, maxLength) => {
+    const source = value[section]?.[key];
+    if (!Array.isArray(source)) return defaultContent[section][key].slice();
+    return source.slice(0, maxItems).map(item => str(item, maxLength)).filter(Boolean);
+  };
+  const cards = (section, key, maxItems, titleMax, descriptionMax) => {
+    const source = value[section]?.[key];
+    const defaults = defaultContent[section][key];
+    if (!Array.isArray(source)) return defaults.map(item => ({ ...item }));
+    return source.slice(0, maxItems).map((item, index) => ({
+      icon: defaults[index]?.icon || defaults[0].icon,
+      title: str(item?.title, titleMax),
+      description: str(item?.description, descriptionMax)
+    })).filter(item => item.title || item.description);
+  };
+
+  const technologies = Array.isArray(value.about?.technologies)
+    ? value.about.technologies.slice(0, 12).map((item, index) => ({
+      icon: defaultContent.about.technologies[index]?.icon || 'fa-solid fa-code text-senaGreen',
+      name: str(item?.name, 40)
+    })).filter(item => item.name)
+    : defaultContent.about.technologies.map(item => ({ ...item }));
+
+  return {
+    header: {
+      siteTitle: text('header', 'siteTitle', 180),
+      siteDescription: text('header', 'siteDescription', 300),
+      schoolLogo: image('header', 'schoolLogo'),
+      senaLogo: image('header', 'senaLogo'),
+      technicalLogo: image('header', 'technicalLogo'),
+      kicker: text('header', 'kicker', 80),
+      programName: text('header', 'programName', 100)
+    },
+    hero: {
+      eyebrow: text('hero', 'eyebrow', 120),
+      titlePrefix: text('hero', 'titlePrefix', 100),
+      titleEmphasis: text('hero', 'titleEmphasis', 120),
+      description: text('hero', 'description', 600),
+      primaryButton: text('hero', 'primaryButton', 80),
+      secondaryButton: text('hero', 'secondaryButton', 80),
+      image: image('hero', 'image'),
+      slogan: text('hero', 'slogan', 160),
+      cardTitle: text('hero', 'cardTitle', 120),
+      cardDescription: text('hero', 'cardDescription', 200)
+    },
+    about: {
+      title: text('about', 'title', 120),
+      description: text('about', 'description', 500),
+      features: cards('about', 'features', 6, 100, 400),
+      technologyTitle: text('about', 'technologyTitle', 120),
+      technologies
+    },
+    projects: {
+      badge: text('projects', 'badge', 100),
+      title: text('projects', 'title', 120),
+      description: text('projects', 'description', 500),
+      eventDate: validDate,
+      countdownLabel: text('projects', 'countdownLabel', 120),
+      countdownToday: text('projects', 'countdownToday', 160),
+      countdownDone: text('projects', 'countdownDone', 160),
+      countdownDays: text('projects', 'countdownDays', 30),
+      countdownHours: text('projects', 'countdownHours', 30),
+      countdownMinutes: text('projects', 'countdownMinutes', 30),
+      countdownSeconds: text('projects', 'countdownSeconds', 30),
+      searchPlaceholder: text('projects', 'searchPlaceholder', 120),
+      projectLinkLabel: text('projects', 'projectLinkLabel', 40),
+      emptyNoProjects: text('projects', 'emptyNoProjects', 200),
+      emptyNoResults: text('projects', 'emptyNoResults', 200)
+    },
+    gallery: {
+      title: text('gallery', 'title', 120),
+      description: text('gallery', 'description', 500)
+    },
+    spotlight: {
+      eyebrow: text('spotlight', 'eyebrow', 100),
+      title: text('spotlight', 'title', 120),
+      description: text('spotlight', 'description', 600),
+      image: image('spotlight', 'image')
+    },
+    profile: {
+      eyebrow: text('profile', 'eyebrow', 120),
+      title: text('profile', 'title', 120),
+      description: text('profile', 'description', 500),
+      points: lines('profile', 'points', 8, 240),
+      benefitsTitle: text('profile', 'benefitsTitle', 120),
+      benefits: cards('profile', 'benefits', 6, 100, 300)
+    },
+    footer: {
+      title: text('footer', 'title', 180),
+      location: text('footer', 'location', 120),
+      copyright: text('footer', 'copyright', 120),
+      creator: text('footer', 'creator', 120)
+    }
+  };
+}
+
+const normalizedContent = normalizeContent(db.content);
+if (JSON.stringify(db.content) !== JSON.stringify(normalizedContent)) {
+  db.content = normalizedContent;
+  save();
+}
+
 function buildProject(b, existing) {
   const url = cleanUrl(b.url);
   if (!str(b.name, 100)) return { error: 'El nombre es obligatorio.' };
@@ -151,6 +356,14 @@ async function handleApi(req, res, url) {
   }
 
   if (!isAuth(req)) return send(res, 401, { error: 'No autorizado' });
+
+  if (url.pathname === '/api/content' && method === 'PUT') {
+    let body;
+    try { body = JSON.parse(await readBody(req, 30000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    db.content = normalizeContent(body);
+    save();
+    return send(res, 200, db.content);
+  }
 
   if (url.pathname === '/api/upload' && method === 'POST') {
     let body;
