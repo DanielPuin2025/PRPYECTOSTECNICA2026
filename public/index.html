@@ -6,7 +6,7 @@
     <title>Sustentaciones 2026 | Técnica en Programación de Software - Megacolegio El Progreso & SENA</title>
     <meta name="description" content="Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.">
     <meta name="theme-color" content="#0f172a">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: { senaGreen: '#39A900', senaDark: '#00324D', senaLight: '#E8F5E9', techDark: '#0f172a' } } } }
@@ -15,10 +15,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .matrix-bg {
-            position: relative; overflow: hidden;
-            background: radial-gradient(circle at center, rgba(0, 50, 77, 0.85) 0%, rgba(10, 15, 30, 0.95) 100%),
-                        url('img/logotecnicaok.jpeg') center/cover no-repeat;
+        .matrix-bg { position: relative; overflow: hidden; background: radial-gradient(circle at center, #00324d 0%, #0a0f1e 100%); }
+        .matrix-bg::before {
+            content: ""; position: absolute; inset: 0;
+            background: url('img/logo-tecnica-ultimo.png') center / min(75vw, 660px) auto no-repeat;
+            opacity: .4; pointer-events: none;
         }
         #matrix-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .18; z-index: 1; }
         .hero-content { position: relative; z-index: 2; }
@@ -47,18 +48,38 @@
 
     <!-- HEADER -->
     <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3 sm:space-x-4">
-                <a href="#inicio"><img id="header-school-logo" src="img/logo_mega_ok.png" alt="Megacolegio El Progreso" class="h-12 w-12 object-contain bg-white/10 p-1 rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/00324D/ffffff?text=MCP'"></a>
-                <a href="#inicio"><img id="header-sena-logo" src="img/logo_sena_ok.png" alt="SENA" class="h-12 w-12 object-contain bg-white/10 p-1 rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/39A900/ffffff?text=SENA'"></a>
-                <a href="#inicio" class="hidden sm:block"><img id="header-technical-logo" src="img/logotecnicaok.jpeg" alt="Técnica Programación" class="h-12 w-12 object-contain rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/0f172a/39A900?text=Tech'"></a>
-                <div class="hidden md:block border-l border-slate-700 pl-3">
-                    <span id="header-kicker" class="text-xs font-semibold text-senaGreen tracking-wider uppercase block">Articulación Media</span>
-                    <span id="header-program-name" class="text-sm font-bold text-slate-200">Programación de Software</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-2 sm:gap-4">
+                    <div class="flex shrink-0 items-end gap-1.5 sm:gap-2.5 rounded-2xl border border-slate-700 bg-slate-800/70 p-1.5 sm:p-2" aria-label="Instituciones y programa">
+                        <a href="#inicio" class="group flex flex-col items-center gap-1" aria-label="Megacolegio El Progreso">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-1 sm:h-12 sm:w-12"><img id="header-school-logo" src="img/logo_mega_ok.png" alt="" class="h-full w-full object-contain" onerror="this.src='https://placehold.co/100x100/00324D/ffffff?text=MCP'"></span>
+                            <span class="hidden text-[9px] font-bold uppercase tracking-wide text-slate-300 sm:block">Megacolegio</span>
+                        </a>
+                        <a href="#inicio" class="group flex flex-col items-center gap-1" aria-label="SENA">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-1 sm:h-12 sm:w-12"><img id="header-sena-logo" src="img/logo_sena_ok.png" alt="" class="h-full w-full object-contain" onerror="this.src='https://placehold.co/100x100/39A900/ffffff?text=SENA'"></span>
+                            <span class="hidden text-[9px] font-bold uppercase tracking-wide text-slate-300 sm:block">SENA</span>
+                        </a>
+                        <a href="#propuesta-diseno" class="group flex flex-col items-center gap-1" aria-label="Técnica en Programación de Software">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-0.5 ring-1 ring-senaGreen/70 sm:h-12 sm:w-12"><img id="header-technical-logo" src="img/logo-tecnica-ultimo.png" alt="" class="h-full w-full object-contain" onerror="this.src='https://placehold.co/100x100/0f172a/39A900?text=Tech'"></span>
+                            <span class="hidden text-[9px] font-bold uppercase tracking-wide text-senaGreen sm:block">Técnica</span>
+                        </a>
+                    </div>
+                    <div class="hidden min-w-0 border-l border-slate-700 pl-3 md:block lg:pl-4">
+                        <span id="header-kicker" class="block text-[10px] font-semibold uppercase tracking-wider text-senaGreen lg:text-xs">Articulación Media</span>
+                        <span id="header-program-name" class="block truncate text-xs font-bold text-slate-100 lg:text-sm">Programación de Software</span>
+                    </div>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <button onclick="openAdmin()" class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-senaGreen to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-senaGreen/20 transition-all hover:from-emerald-600 hover:to-senaGreen sm:px-4">
+                        <i class="fa-solid fa-user-gear"></i><span class="hidden sm:inline">Administrador</span>
+                    </button>
+                    <button onclick="toggleMobileMenu()" aria-label="Abrir menú" class="p-2 text-slate-300 hover:text-white lg:hidden"><i class="fa-solid fa-bars text-xl"></i></button>
                 </div>
             </div>
 
-            <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium" aria-label="Principal">
+            <nav class="hidden items-center justify-center gap-7 border-t border-slate-800/80 pt-2 text-sm font-medium lg:flex" aria-label="Principal">
                 <a href="#inicio" class="hover:text-senaGreen transition-colors">Inicio</a>
                 <a href="#acerca" class="hover:text-senaGreen transition-colors">¿De qué se trata?</a>
                 <a href="#proyectos-21" class="text-senaGreen font-bold flex items-center gap-1.5 bg-senaGreen/10 px-3 py-1.5 rounded-full border border-senaGreen/30 hover:bg-senaGreen/20 transition-colors">
@@ -68,13 +89,6 @@
                 <a href="#propuesta-diseno" class="hover:text-senaGreen transition-colors">Nuevo diseño</a>
                 <a href="#perfil" class="hover:text-senaGreen transition-colors">Perfil Profesional</a>
             </nav>
-
-            <div class="flex items-center space-x-3">
-                <button onclick="openAdmin()" class="bg-gradient-to-r from-senaGreen to-emerald-600 hover:from-emerald-600 hover:to-senaGreen text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-senaGreen/20 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i><span class="hidden sm:inline">Administrador</span>
-                </button>
-                <button onclick="toggleMobileMenu()" aria-label="Abrir menú" class="lg:hidden text-slate-300 hover:text-white p-2"><i class="fa-solid fa-bars text-xl"></i></button>
-            </div>
         </div>
         <div id="mobile-menu" class="hidden lg:hidden bg-slate-800 border-b border-slate-700 px-4 pt-2 pb-4 space-y-2">
             <a href="#inicio" onclick="toggleMobileMenu()" class="block py-2 text-slate-200 hover:text-senaGreen">Inicio</a>
@@ -202,8 +216,14 @@
                     <div class="w-20 h-1.5 bg-senaGreen rounded-full"></div>
                     <p id="spotlight-description" class="text-slate-300 text-lg leading-relaxed">Queremos incluir este nuevo diseño para la Técnica en Programación de Software del SENA, articulada con la I.E. Megacolegio El Progreso. Una identidad que representa el talento, la creatividad y el futuro digital de nuestros estudiantes.</p>
                 </div>
-                <div class="reveal bg-slate-900/80 border border-senaGreen/30 rounded-3xl p-8 sm:p-12 shadow-2xl shadow-senaGreen/10 flex items-center justify-center min-h-72">
-                    <img id="spotlight-image" src="img/logotecnicaok.jpeg" alt="Propuesta de diseño de la Técnica en Programación de Software" class="w-full max-w-sm max-h-80 object-contain drop-shadow-[0_0_30px_rgba(57,169,0,0.25)]">
+                <div class="reveal flex min-h-72 flex-col items-center justify-center gap-5 rounded-3xl border border-white/70 bg-gradient-to-br from-white via-slate-100 to-slate-300 p-6 shadow-2xl shadow-senaGreen/20 sm:p-9">
+                    <img id="spotlight-image" src="img/logo-tecnica-ultimo.png" alt="Propuesta de diseño de la Técnica en Programación de Software" class="w-full max-w-lg max-h-96 object-contain drop-shadow-[0_8px_18px_rgba(15,23,42,0.22)]">
+                    <div id="spotlight-vote" class="w-full max-w-md rounded-2xl border border-slate-300 bg-white/90 px-4 py-3 text-center shadow-lg" aria-label="Calificación del logo">
+                        <p class="text-sm font-bold text-slate-800">¿Qué te parece este logo?</p>
+                        <div id="spotlight-stars" class="mt-1 flex justify-center gap-1" role="group" aria-label="Califica el logo de una a cinco estrellas"></div>
+                        <p id="spotlight-vote-summary" class="mt-1 text-xs font-semibold text-slate-600" aria-live="polite">Aún no hay votos</p>
+                        <p id="spotlight-vote-status" class="mt-1 text-xs text-slate-500" aria-live="polite">Una calificación por navegador. Tu opinión ayuda a elegir esta identidad.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -386,6 +406,9 @@
         const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
         let db = { projects: [], gallery: [] };
         let token = sessionStorage.getItem('adm') || '';
+        const SPOTLIGHT_VOTE_KEY = 'spotlight-voter-v1';
+        let spotlightVotes = { count: 0, average: 0, distribution: [0, 0, 0, 0, 0], userRating: null };
+        let spotlightVotePending = false;
         let pendingLogo = null; // URL ya subida
         let formType = 'projects';
 
@@ -424,6 +447,63 @@
             try { db = await api('/api/data'); } catch { showToast('Sin conexión', 'No se pudieron cargar los datos.', true); }
             if (db.content) applyContent();
             renderProjects(); renderGallery(); renderAdmin();
+            await loadSpotlightVotes();
+        }
+
+        function storedSpotlightVoterId() {
+            return localStorage.getItem(SPOTLIGHT_VOTE_KEY) || '';
+        }
+
+        async function loadSpotlightVotes() {
+            try {
+                const voterId = storedSpotlightVoterId();
+                spotlightVotes = await api(`/api/spotlight-votes${voterId ? `?voterId=${encodeURIComponent(voterId)}` : ''}`);
+            } catch (error) {
+                showToast('Votación no disponible', error.message, true);
+            }
+            renderSpotlightVotes();
+        }
+
+        function renderSpotlightVotes() {
+            const hasVoted = Number.isInteger(spotlightVotes.userRating);
+            $('spotlight-stars').innerHTML = Array.from({ length: 5 }, (_, index) => {
+                const rating = index + 1;
+                const selected = hasVoted && rating <= spotlightVotes.userRating;
+                return `<button type="button" onclick="submitSpotlightVote(${rating})" ${hasVoted || spotlightVotePending ? 'disabled' : ''}
+                    aria-label="Calificar con ${rating} ${rating === 1 ? 'estrella' : 'estrellas'}" aria-pressed="${selected}"
+                    class="rounded-lg p-1 text-2xl ${selected ? 'text-amber-500' : 'text-slate-300'} ${hasVoted || spotlightVotePending ? 'cursor-default' : 'cursor-pointer hover:scale-110 hover:text-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-senaGreen'} disabled:opacity-100">
+                    <i class="fa-${selected ? 'solid' : 'regular'} fa-star" aria-hidden="true"></i>
+                </button>`;
+            }).join('');
+            $('spotlight-vote-summary').textContent = spotlightVotes.count
+                ? `${spotlightVotes.average.toFixed(1)} / 5 · ${spotlightVotes.count} ${spotlightVotes.count === 1 ? 'voto' : 'votos'}`
+                : 'Aún no hay votos';
+            $('spotlight-vote-status').textContent = spotlightVotePending
+                ? 'Enviando tu calificación…'
+                : hasVoted
+                    ? `Ya calificaste este logo con ${spotlightVotes.userRating} ${spotlightVotes.userRating === 1 ? 'estrella' : 'estrellas'}. ¡Gracias!`
+                    : 'Una calificación por navegador. Tu opinión ayuda a elegir esta identidad.';
+        }
+
+        async function submitSpotlightVote(rating) {
+            if (spotlightVotePending || Number.isInteger(spotlightVotes.userRating)) return;
+            spotlightVotePending = true;
+            renderSpotlightVotes();
+            try {
+                let voterId = storedSpotlightVoterId();
+                if (!/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(voterId)) {
+                    voterId = crypto.randomUUID();
+                    localStorage.setItem(SPOTLIGHT_VOTE_KEY, voterId);
+                }
+                spotlightVotes = await api('/api/spotlight-votes', 'POST', { voterId, rating });
+                showToast('¡Gracias por votar!', `Calificaste el logo con ${rating} ${rating === 1 ? 'estrella' : 'estrellas'}.`);
+            } catch (error) {
+                showToast('No se pudo guardar el voto', error.message, true);
+                await loadSpotlightVotes();
+            } finally {
+                spotlightVotePending = false;
+                renderSpotlightVotes();
+            }
         }
 
         // ---------- Render ----------

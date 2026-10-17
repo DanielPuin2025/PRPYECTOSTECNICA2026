@@ -22,7 +22,7 @@ const defaultContent = {
     siteDescription: 'Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.',
     schoolLogo: 'img/logo_mega_ok.png',
     senaLogo: 'img/logo_sena_ok.png',
-    technicalLogo: 'img/logotecnicaok.jpeg',
+    technicalLogo: 'img/logo-tecnica-ultimo.png',
     kicker: 'Articulación Media',
     programName: 'Programación de Software'
   },
@@ -80,7 +80,7 @@ const defaultContent = {
     eyebrow: 'Propuesta de identidad',
     title: 'Un nuevo diseño para nuestra técnica',
     description: 'Queremos incluir este nuevo diseño para la Técnica en Programación de Software del SENA, articulada con la I.E. Megacolegio El Progreso. Una identidad que representa el talento, la creatividad y el futuro digital de nuestros estudiantes.',
-    image: 'img/logotecnicaok.jpeg'
+    image: 'img/logo-tecnica-ultimo.png'
   },
   profile: {
     eyebrow: 'Articulación con la Educación Media',
@@ -110,6 +110,7 @@ const defaultContent = {
 const defaultDb = {
   projects: [],
   content: defaultContent,
+  spotlightVotes: [],
   gallery: [
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
@@ -125,6 +126,10 @@ try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
 catch { db = defaultDb; save(); }
 if (!db.content) {
   db.content = defaultContent;
+  save();
+}
+if (!Array.isArray(db.spotlightVotes)) {
+  db.spotlightVotes = [];
   save();
 }
 
@@ -201,7 +206,12 @@ const str = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 function normalizeContent(input) {
   const value = input && typeof input === 'object' ? input : {};
   const text = (section, key, max = 500) => str(value[section]?.[key] ?? defaultContent[section][key], max);
-  const image = (section, key) => cleanImage(value[section]?.[key] ?? defaultContent[section][key]) || defaultContent[section][key];
+  const image = (section, key) => {
+    const path = cleanImage(value[section]?.[key] ?? defaultContent[section][key]) || defaultContent[section][key];
+    return path === 'img/logotecnicaok.jpeg' && (section === 'header' && key === 'technicalLogo' || section === 'spotlight' && key === 'image')
+      ? 'img/logo-tecnica-ultimo.png'
+      : path;
+  };
   const date = str(value.projects?.eventDate ?? defaultContent.projects.eventDate, 10);
   const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(new Date(`${date}T00:00:00`).getTime())
     && new Date(`${date}T00:00:00`).toISOString().slice(0, 10) === date ? date : defaultContent.projects.eventDate;
@@ -330,13 +340,59 @@ function buildGallery(b, existing) {
   return { item: { id: existing ? existing.id : crypto.randomUUID(), title: str(b.title, 120), image, category: str(b.category, 40) } };
 }
 
+function spotlightVoteSummary(voterKey) {
+  const distribution = [0, 0, 0, 0, 0];
+  let total = 0;
+  let count = 0;
+  let userRating = null;
+  for (const vote of db.spotlightVotes) {
+    if (!Number.isInteger(vote.rating) || vote.rating < 1 || vote.rating > 5) continue;
+    distribution[vote.rating - 1]++;
+    total += vote.rating;
+    count++;
+    if (voterKey && vote.voterKey === voterKey) userRating = vote.rating;
+  }
+  return {
+    count,
+    average: count ? Number((total / count).toFixed(1)) : 0,
+    distribution,
+    userRating
+  };
+}
+
 const collections = { projects: buildProject, gallery: buildGallery };
 
 async function handleApi(req, res, url) {
   const method = req.method;
 
   if (url.pathname === '/api/data' && method === 'GET') {
-    return send(res, 200, db, { 'Cache-Control': 'no-store' });
+    return send(res, 200, { projects: db.projects, gallery: db.gallery, content: db.content }, { 'Cache-Control': 'no-store' });
+  }
+
+  if (url.pathname === '/api/spotlight-votes' && method === 'GET') {
+    const voterId = url.searchParams.get('voterId') || '';
+    const voterKey = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(voterId)
+      ? crypto.createHash('sha256').update(voterId).digest('hex')
+      : '';
+    return send(res, 200, spotlightVoteSummary(voterKey), { 'Cache-Control': 'no-store' });
+  }
+
+  if (url.pathname === '/api/spotlight-votes' && method === 'POST') {
+    let body;
+    try { body = JSON.parse(await readBody(req, 2000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const voterId = String(body.voterId || '');
+    const rating = body.rating;
+    if (!/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(voterId)
+      || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return send(res, 400, { error: 'Voto inválido. Selecciona entre 1 y 5 estrellas.' });
+    }
+    const voterKey = crypto.createHash('sha256').update(voterId).digest('hex');
+    if (db.spotlightVotes.some(vote => vote.voterKey === voterKey)) {
+      return send(res, 409, { error: 'Ya registraste una votación desde este navegador.', ...spotlightVoteSummary(voterKey) });
+    }
+    db.spotlightVotes.push({ voterKey, rating });
+    save();
+    return send(res, 201, spotlightVoteSummary(voterKey));
   }
 
   if (url.pathname === '/api/login' && method === 'POST') {
