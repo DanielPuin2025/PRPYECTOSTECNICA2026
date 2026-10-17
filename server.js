@@ -103,7 +103,8 @@ const defaultContent = {
     title: 'Técnica en Programación de Software - Megacolegio El Progreso & SENA',
     location: 'Yopal, Casanare, Colombia.',
     copyright: '© 2026 Todos los derechos reservados.',
-    creator: 'Creador: Daniel Puin Instructor Sena'
+    creator: 'Creador: Daniel Puin Instructor Sena',
+    creatorImage: ''
   }
 };
 
@@ -306,7 +307,8 @@ function normalizeContent(input) {
       title: text('footer', 'title', 180),
       location: text('footer', 'location', 120),
       copyright: text('footer', 'copyright', 120),
-      creator: text('footer', 'creator', 120)
+      creator: text('footer', 'creator', 120),
+      creatorImage: image('footer', 'creatorImage')
     }
   };
 }

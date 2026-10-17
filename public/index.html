@@ -18,7 +18,7 @@
         .matrix-bg { position: relative; overflow: hidden; background: radial-gradient(circle at center, #00324d 0%, #0a0f1e 100%); }
         .matrix-bg::before {
             content: ""; position: absolute; inset: 0;
-            background: url('img/logo-tecnica-ultimo.png') center / min(75vw, 660px) auto no-repeat;
+            background: url('img/logo-tecnica-ultimo.png') center / min(78vw, 720px) auto no-repeat;
             opacity: .4; pointer-events: none;
         }
         #matrix-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .18; z-index: 1; }
@@ -66,8 +66,8 @@
                         </a>
                     </div>
                     <div class="hidden min-w-0 border-l border-slate-700 pl-3 md:block lg:pl-4">
-                        <span id="header-kicker" class="block text-[10px] font-semibold uppercase tracking-wider text-senaGreen lg:text-xs">Articulación Media</span>
-                        <span id="header-program-name" class="block truncate text-xs font-bold text-slate-100 lg:text-sm">Programación de Software</span>
+                        <span id="header-kicker" class="block text-xs font-semibold uppercase tracking-wider text-senaGreen lg:text-sm">Articulación Media</span>
+                        <span id="header-program-name" class="block truncate text-sm font-bold text-slate-100 lg:text-base">Programación de Software</span>
                     </div>
                 </div>
 
@@ -124,7 +124,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="lg:col-span-5 flex justify-center">
+                <div class="lg:col-span-5 flex justify-center lg:justify-end">
                     <div class="relative w-full max-w-md">
                         <div class="absolute -inset-1 bg-gradient-to-r from-senaGreen to-blue-500 rounded-3xl blur-lg opacity-30 animate-pulse"></div>
                         <div class="relative bg-slate-900/90 border border-slate-700 rounded-3xl p-4 shadow-2xl overflow-hidden backdrop-blur-sm">
@@ -261,7 +261,10 @@
             </div>
             <div class="text-xs text-slate-400 bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl">
                 <p id="footer-copyright">© 2026 Todos los derechos reservados.</p>
-                <p id="footer-creator" class="text-senaGreen font-bold mt-0.5">Creador: Daniel Puin Instructor Sena</p>
+                <div class="mt-2 flex items-center gap-2">
+                    <img id="footer-creator-image" src="" alt="Foto del creador" class="hidden h-10 w-10 rounded-full border border-senaGreen/50 bg-slate-800 object-cover">
+                    <p id="footer-creator" class="text-senaGreen font-bold">Creador: Daniel Puin Instructor Sena</p>
+                </div>
             </div>
         </div>
     </footer>
@@ -551,6 +554,9 @@
             text('footer-location', c.footer.location);
             text('footer-copyright', c.footer.copyright);
             text('footer-creator', c.footer.creator);
+            if (c.footer.creatorImage) $('footer-creator-image').src = c.footer.creatorImage;
+            else $('footer-creator-image').removeAttribute('src');
+            $('footer-creator-image').classList.toggle('hidden', !c.footer.creatorImage);
 
             $('project-search').placeholder = c.projects.searchPlaceholder;
             $('projects-empty').textContent = c.projects.emptyNoProjects;
@@ -761,7 +767,8 @@
                     field('footer.title', 'Nombre de la técnica e instituciones', { multiline: true }),
                     field('footer.location', 'Ubicación'),
                     field('footer.copyright', 'Derechos de autor'),
-                    field('footer.creator', 'Créditos')
+                    field('footer.creator', 'Créditos'),
+                    field('footer.creatorImage', 'Foto del creador', { image: true })
                 ])
             ];
             $('content-editor').innerHTML = fields.join('');
