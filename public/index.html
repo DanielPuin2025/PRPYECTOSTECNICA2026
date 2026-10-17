@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustentaciones 2026 | Técnica en Programación de Software - Megacolegio El Progreso & SENA</title>
+    <meta name="description" content="Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.">
+    <meta name="theme-color" content="#0f172a">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { senaGreen: '#39A900', senaDark: '#00324D', senaLight: '#E8F5E9', techDark: '#0f172a' } } } }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .matrix-bg {
+            position: relative; overflow: hidden;
+            background: radial-gradient(circle at center, rgba(0, 50, 77, 0.85) 0%, rgba(10, 15, 30, 0.95) 100%),
+                        url('img/logotecnicaok.jpeg') center/cover no-repeat;
+        }
+        #matrix-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .25; z-index: 1; }
+        .hero-content { position: relative; z-index: 2; }
+        .project-card { transition: transform .25s, border-color .25s, box-shadow .25s; }
+        .project-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -12px rgba(57,169,0,.25); }
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal.show { opacity: 1; transform: none; }
+        .count-box { font-variant-numeric: tabular-nums; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+            .project-card:hover { transform: none; }
+            #matrix-canvas { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 antialiased selection:bg-senaGreen selection:text-white">
+
+    <!-- Toast -->
+    <div id="toast" role="status" aria-live="polite" class="fixed bottom-5 right-5 z-[60] transform translate-y-32 opacity-0 transition-all duration-300 bg-slate-800 border border-senaGreen text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i id="toast-icon" class="fa-solid fa-check-circle text-senaGreen text-xl"></i>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm">Notificación</h4>
+            <p id="toast-msg" class="text-xs text-slate-300"></p>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <a href="#inicio"><img src="img/logo_mega_ok.png" alt="Megacolegio El Progreso" class="h-12 w-12 object-contain bg-white/10 p-1 rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/00324D/ffffff?text=MCP'"></a>
+                <a href="#inicio"><img src="img/logo_sena_ok.png" alt="SENA" class="h-12 w-12 object-contain bg-white/10 p-1 rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/39A900/ffffff?text=SENA'"></a>
+                <a href="#inicio" class="hidden sm:block"><img src="img/logotecnicaok.jpeg" alt="Técnica Programación" class="h-12 w-12 object-cover rounded-lg border border-slate-700 hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/0f172a/39A900?text=Tech'"></a>
+                <div class="hidden md:block border-l border-slate-700 pl-3">
+                    <span class="text-xs font-semibold text-senaGreen tracking-wider uppercase block">Articulación Media</span>
+                    <span class="text-sm font-bold text-slate-200">Programación de Software</span>
+                </div>
+            </div>
+
+            <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium" aria-label="Principal">
+                <a href="#inicio" class="hover:text-senaGreen transition-colors">Inicio</a>
+                <a href="#acerca" class="hover:text-senaGreen transition-colors">¿De qué se trata?</a>
+                <a href="#proyectos-21" class="text-senaGreen font-bold flex items-center gap-1.5 bg-senaGreen/10 px-3 py-1.5 rounded-full border border-senaGreen/30 hover:bg-senaGreen/20 transition-colors">
+                    <i class="fa-solid fa-rocket"></i> Proyectos 21 Oct.
+                </a>
+                <a href="#galeria" class="hover:text-senaGreen transition-colors">Galería</a>
+                <a href="#perfil" class="hover:text-senaGreen transition-colors">Perfil Profesional</a>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="openAdmin()" class="bg-gradient-to-r from-senaGreen to-emerald-600 hover:from-emerald-600 hover:to-senaGreen text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-senaGreen/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear"></i><span class="hidden sm:inline">Administrador</span>
+                </button>
+                <button onclick="toggleMobileMenu()" aria-label="Abrir menú" class="lg:hidden text-slate-300 hover:text-white p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden lg:hidden bg-slate-800 border-b border-slate-700 px-4 pt-2 pb-4 space-y-2">
+            <a href="#inicio" onclick="toggleMobileMenu()" class="block py-2 text-slate-200 hover:text-senaGreen">Inicio</a>
+            <a href="#acerca" onclick="toggleMobileMenu()" class="block py-2 text-slate-200 hover:text-senaGreen">¿De qué se trata?</a>
+            <a href="#proyectos-21" onclick="toggleMobileMenu()" class="py-2 text-senaGreen font-bold flex items-center gap-2"><i class="fa-solid fa-rocket"></i> Proyectos 21 Octubre</a>
+            <a href="#galeria" onclick="toggleMobileMenu()" class="block py-2 text-slate-200 hover:text-senaGreen">Galería</a>
+            <a href="#perfil" onclick="toggleMobileMenu()" class="block py-2 text-slate-200 hover:text-senaGreen">Perfil Profesional</a>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section id="inicio" class="matrix-bg py-20 lg:py-32 relative border-b border-slate-800">
+        <canvas id="matrix-canvas" aria-hidden="true"></canvas>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hero-content">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 bg-senaGreen/20 border border-senaGreen/40 text-senaGreen px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase">
+                        <i class="fa-solid fa-code"></i> Megacolegio El Progreso & SENA Yopal
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                        Técnica en <span class="text-transparent bg-clip-text bg-gradient-to-r from-senaGreen to-emerald-400">Programación de Software</span>
+                    </h1>
+                    <p class="text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0">
+                        Crea, innova y desarrolla el futuro digital. Formamos profesionales con habilidades clave en diseño, desarrollo y pruebas de sistemas informáticos bajo metodologías ágiles en Yopal, Casanare.
+                    </p>
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
+                        <a href="#proyectos-21" class="bg-senaGreen hover:bg-emerald-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-xl shadow-senaGreen/30 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-rocket"></i> Ver Proyectos 21 de Octubre
+                        </a>
+                        <a href="#acerca" class="bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold px-6 py-3.5 rounded-xl transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> Conocer Más
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-senaGreen to-blue-500 rounded-3xl blur-lg opacity-30 animate-pulse"></div>
+                        <div class="relative bg-slate-900/90 border border-slate-700 rounded-3xl p-4 shadow-2xl overflow-hidden backdrop-blur-sm">
+                            <img src="img/publicidad-cusiana.jpg" alt="Publicidad Técnica" class="w-full h-80 object-cover rounded-2xl shadow-md mb-4 hover:scale-[1.02] transition-transform" onerror="this.src='https://placehold.co/600x400/00324D/39A900?text=Programacion+SENA'">
+                            <div class="text-center p-2">
+                                <span class="text-xs text-senaGreen font-bold uppercase tracking-wider">¡Tu esfuerzo hoy, abre grandes oportunidades mañana!</span>
+                                <h3 class="text-white font-bold text-lg mt-1">Programa Cusiana Digital</h3>
+                                <p class="text-xs text-slate-400 mt-1">Articulación con la Educación Media - SENA Regional Casanare</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACERCA -->
+    <section id="acerca" class="py-20 bg-slate-950/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-4 reveal">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white">¿De qué se trata la técnica?</h2>
+                <div class="w-20 h-1.5 bg-senaGreen mx-auto rounded-full"></div>
+                <p class="text-slate-300">El Técnico en Programación de Software forma estudiantes con competencias de alta demanda en el sector tecnológico actual.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div class="reveal bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hover:border-senaGreen/50 transition-all group">
+                    <div class="w-14 h-14 bg-senaGreen/10 rounded-xl flex items-center justify-center text-senaGreen text-2xl mb-5 group-hover:bg-senaGreen group-hover:text-white transition-colors"><i class="fa-solid fa-laptop-code"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Desarrollo de Software</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Aprende a diseñar, construir y desplegar aplicaciones web y de escritorio eficientes, aplicando lógica de programación y buenas prácticas de ingeniería.</p>
+                </div>
+                <div class="reveal bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hover:border-senaGreen/50 transition-all group">
+                    <div class="w-14 h-14 bg-senaGreen/10 rounded-xl flex items-center justify-center text-senaGreen text-2xl mb-5 group-hover:bg-senaGreen group-hover:text-white transition-colors"><i class="fa-solid fa-database"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Bases de Datos & SQL</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Gestiona y almacena información de manera segura utilizando motores de bases de datos relacionales y consultas optimizadas para sistemas robustos.</p>
+                </div>
+                <div class="reveal bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hover:border-senaGreen/50 transition-all group">
+                    <div class="w-14 h-14 bg-senaGreen/10 rounded-xl flex items-center justify-center text-senaGreen text-2xl mb-5 group-hover:bg-senaGreen group-hover:text-white transition-colors"><i class="fa-solid fa-gamepad"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Videojuegos & Apps</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Desarrolla tus propios proyectos interactivos y videojuegos experimentando con creatividad y lógica computacional avanzada.</p>
+                </div>
+            </div>
+            <div class="reveal bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                <h3 class="text-center text-xl font-bold text-white mb-8">Tecnologías y Lenguajes que Dominamos</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center gap-2 hover:border-senaGreen hover:-translate-y-1 transition-all"><i class="fa-brands fa-python text-4xl text-amber-400"></i><span class="font-bold text-sm text-slate-200">Python</span></div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center gap-2 hover:border-senaGreen hover:-translate-y-1 transition-all"><i class="fa-brands fa-java text-4xl text-red-500"></i><span class="font-bold text-sm text-slate-200">Java</span></div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center gap-2 hover:border-senaGreen hover:-translate-y-1 transition-all"><i class="fa-solid fa-code text-4xl text-blue-500"></i><span class="font-bold text-sm text-slate-200">C++</span></div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center gap-2 hover:border-senaGreen hover:-translate-y-1 transition-all"><i class="fa-solid fa-server text-4xl text-sky-400"></i><span class="font-bold text-sm text-slate-200">SQL / DB</span></div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center gap-2 hover:border-senaGreen hover:-translate-y-1 transition-all"><i class="fa-brands fa-node-js text-4xl text-emerald-500"></i><span class="font-bold text-sm text-slate-200">Node.js</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROYECTOS -->
+    <section id="proyectos-21" class="py-20 bg-gradient-to-b from-slate-900 to-slate-950 relative border-y border-senaGreen/30">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-senaGreen/10 via-transparent to-transparent pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-10 space-y-4">
+                <div class="inline-flex items-center gap-2 bg-senaGreen text-white px-5 py-2 rounded-full text-sm font-extrabold tracking-wider uppercase shadow-lg shadow-senaGreen/40">
+                    <i class="fa-solid fa-star"></i> Evento Especial: 21 de Octubre
+                </div>
+                <h2 class="text-3xl sm:text-5xl font-extrabold text-white">Proyectos a Presentar</h2>
+                <div class="w-24 h-2 bg-senaGreen mx-auto rounded-full"></div>
+                <p class="text-slate-300 sm:text-lg">Conoce los proyectos desarrollados por los estudiantes de la técnica. Haz clic en cualquier tarjeta para abrir la página de cada equipo.</p>
+            </div>
+
+            <!-- Cuenta regresiva -->
+            <div id="countdown" class="max-w-xl mx-auto mb-12 bg-slate-900/80 border border-slate-700 rounded-2xl p-5 text-center">
+                <p id="count-label" class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-3">Faltan para las sustentaciones</p>
+                <div id="count-boxes" class="grid grid-cols-4 gap-3">
+                    <div class="count-box bg-slate-950 border border-slate-800 rounded-xl py-3"><div id="cd-d" class="text-3xl font-extrabold text-senaGreen">0</div><div class="text-[10px] uppercase text-slate-400">Días</div></div>
+                    <div class="count-box bg-slate-950 border border-slate-800 rounded-xl py-3"><div id="cd-h" class="text-3xl font-extrabold text-senaGreen">0</div><div class="text-[10px] uppercase text-slate-400">Horas</div></div>
+                    <div class="count-box bg-slate-950 border border-slate-800 rounded-xl py-3"><div id="cd-m" class="text-3xl font-extrabold text-senaGreen">0</div><div class="text-[10px] uppercase text-slate-400">Min</div></div>
+                    <div class="count-box bg-slate-950 border border-slate-800 rounded-xl py-3"><div id="cd-s" class="text-3xl font-extrabold text-senaGreen">0</div><div class="text-[10px] uppercase text-slate-400">Seg</div></div>
+                </div>
+            </div>
+
+            <!-- Buscador -->
+            <div class="max-w-md mx-auto mb-10 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                <input id="project-search" type="search" placeholder="Buscar proyecto o estudiante..." aria-label="Buscar proyecto" class="w-full bg-slate-900 border border-slate-700 rounded-full pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-senaGreen focus:outline-none">
+            </div>
+
+            <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            <p id="projects-empty" class="hidden text-center text-slate-400 py-10"></p>
+        </div>
+    </section>
+
+    <!-- GALERIA -->
+    <section id="galeria" class="py-20 bg-slate-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-4 reveal">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Galería de Momentos</h2>
+                <div class="w-20 h-1.5 bg-senaGreen mx-auto rounded-full"></div>
+                <p class="text-slate-300">Salidas pedagógicas, prácticas técnicas, trabajo en equipo y vivencias de nuestros grupos en el Megacolegio El Progreso y SENA Yopal.</p>
+            </div>
+            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+        </div>
+    </section>
+
+    <!-- PERFIL -->
+    <section id="perfil" class="py-20 bg-slate-950 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 reveal">
+                    <span class="text-senaGreen font-bold tracking-wider uppercase text-sm block">Articulación con la Educación Media</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Perfil Profesional del Egresado</h2>
+                    <p class="text-slate-300 leading-relaxed">Al finalizar el programa en el Megacolegio El Progreso con el SENA, estarás en capacidad de desempeñarte con éxito en el mundo digital y continuar tu formación superior.</p>
+                    <ul class="space-y-3 text-slate-200">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-senaGreen text-lg"></i> Analizar y desarrollar software de acuerdo con las necesidades del cliente.</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-senaGreen text-lg"></i> Implementar soluciones tecnológicas y bases de datos robustas.</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-senaGreen text-lg"></i> Realizar pruebas de software y asegurar altos estándares de calidad.</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-senaGreen text-lg"></i> Trabajar en equipos ágiles de desarrollo con metodologías modernas.</li>
+                    </ul>
+                </div>
+                <div class="reveal bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-senaGreen/10 rounded-full blur-2xl"></div>
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3"><i class="fa-solid fa-award text-senaGreen text-2xl"></i> Bondades de ser Egresado SENA</h3>
+                    <div class="space-y-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800"><h4 class="font-bold text-senaGreen text-sm">Doble Titulación</h4><p class="text-xs text-slate-400 mt-1">Título de Bachiller Técnico y Técnico SENA simultáneamente.</p></div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800"><h4 class="font-bold text-senaGreen text-sm">Continuidad Académica</h4><p class="text-xs text-slate-400 mt-1">Acceso preferencial a tecnologías y carreras profesionales universitarias.</p></div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800"><h4 class="font-bold text-senaGreen text-sm">Mayor Empleabilidad</h4><p class="text-xs text-slate-400 mt-1">Conexión directa con el sector productivo y tecnológico regional y nacional.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 border-t border-slate-800 py-12 text-slate-400 text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="flex items-center space-x-4 justify-center">
+                <img src="img/logo_mega_ok.png" alt="Megacolegio" class="h-10 w-10 object-contain">
+                <img src="img/logo_sena_ok.png" alt="SENA" class="h-10 w-10 object-contain">
+                <img src="img/logotecnicaok.jpeg" alt="Técnica" class="h-10 w-10 object-cover rounded-lg">
+            </div>
+            <div>
+                <p class="text-slate-300 font-semibold">Técnica en Programación de Software - Megacolegio El Progreso & SENA</p>
+                <p class="text-xs text-slate-500 mt-1">Yopal, Casanare, Colombia.</p>
+            </div>
+            <div class="text-xs text-slate-400 bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl">
+                <p>© 2026 Todos los derechos reservados.</p>
+                <p class="text-senaGreen font-bold mt-0.5">Creador: Daniel Puin Instructor Sena</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LOGIN -->
+    <div id="login-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <form onsubmit="doLogin(event)" class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-lock text-senaGreen"></i> Acceso Administrador</h3>
+            <input id="login-pass" type="password" required autocomplete="current-password" placeholder="Clave" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+            <p id="login-err" class="text-xs text-red-400 hidden"></p>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeModal('login-modal')" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Cancelar</button>
+                <button type="submit" class="bg-senaGreen hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold">Entrar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-slate-800 px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-senaGreen/20 rounded-xl flex items-center justify-center text-senaGreen text-lg"><i class="fa-solid fa-user-shield"></i></div>
+                    <div>
+                        <h3 class="text-white font-bold text-lg">Panel de Administración</h3>
+                        <p class="text-xs text-slate-400">Los cambios se guardan y los ve todo el mundo.</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('admin-modal')" aria-label="Cerrar" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="flex flex-wrap gap-3 border-b border-slate-800 pb-4">
+                    <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 rounded-xl text-sm font-bold bg-senaGreen text-white"><i class="fa-solid fa-rocket mr-2"></i> Proyectos (21 Oct)</button>
+                    <button onclick="switchAdminTab('gallery')" id="btn-tab-gallery" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-images mr-2"></i> Galería</button>
+                </div>
+                <div id="admin-projects-section" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h4 id="admin-projects-title" class="text-white font-bold">Proyectos</h4>
+                        <button onclick="openForm('projects')" class="bg-senaGreen hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-plus"></i> Nuevo Proyecto</button>
+                    </div>
+                    <div id="admin-projects-list" class="space-y-3"></div>
+                </div>
+                <div id="admin-gallery-section" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-white font-bold">Imágenes de la Galería</h4>
+                        <button onclick="openForm('gallery')" class="bg-senaGreen hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-plus"></i> Nueva Imagen</button>
+                    </div>
+                    <div id="admin-gallery-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+            <div class="bg-slate-800/50 px-6 py-4 border-t border-slate-700 flex justify-between">
+                <button onclick="logout()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-right-from-bracket mr-1"></i> Cerrar sesión</button>
+                <button onclick="closeModal('admin-modal')" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-xl text-sm font-semibold">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO -->
+    <div id="item-form-modal" class="fixed inset-0 z-[55] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <form id="crud-form" onsubmit="submitForm(event)" class="bg-slate-900 border border-slate-700 w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 space-y-4">
+            <h3 id="form-title" class="text-xl font-bold text-white">Gestionar</h3>
+            <input type="hidden" id="f-id">
+
+            <div id="fields-projects" class="space-y-4">
+                <div>
+                    <label for="p-name" class="block text-xs font-bold text-slate-300 uppercase mb-1">Nombre del proyecto *</label>
+                    <input id="p-name" maxlength="100" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+                </div>
+                <div>
+                    <label for="p-url" class="block text-xs font-bold text-slate-300 uppercase mb-1">Enlace del proyecto *</label>
+                    <input id="p-url" type="url" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-slate-300 uppercase mb-1">Logo</span>
+                    <div class="flex items-center gap-4">
+                        <img id="p-logo-preview" class="w-16 h-16 object-cover rounded-2xl border border-slate-700 bg-slate-950 hidden" alt="Vista previa del logo">
+                        <input id="p-logo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-senaGreen file:text-white file:font-bold file:cursor-pointer">
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">PNG, JPG, WEBP o GIF, máx. 4 MB. Si no subes logo se mostrará un avatar con las iniciales.</p>
+                </div>
+                <div>
+                    <label for="p-desc" class="block text-xs font-bold text-slate-300 uppercase mb-1">Descripción</label>
+                    <textarea id="p-desc" rows="3" maxlength="400" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label for="p-author" class="block text-xs font-bold text-slate-300 uppercase mb-1">Autor / Estudiantes</label>
+                    <input id="p-author" maxlength="150" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+                </div>
+            </div>
+
+            <div id="fields-gallery" class="space-y-4 hidden">
+                <div>
+                    <label for="g-title" class="block text-xs font-bold text-slate-300 uppercase mb-1">Título *</label>
+                    <input id="g-title" maxlength="120" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-slate-300 uppercase mb-1">Imagen *</span>
+                    <div class="flex items-center gap-4">
+                        <img id="g-preview" class="w-16 h-16 object-cover rounded-xl border border-slate-700 bg-slate-950 hidden" alt="Vista previa">
+                        <input id="g-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-senaGreen file:text-white file:font-bold file:cursor-pointer">
+                    </div>
+                </div>
+                <div>
+                    <label for="g-cat" class="block text-xs font-bold text-slate-300 uppercase mb-1">Categoría</label>
+                    <input id="g-cat" maxlength="40" placeholder="Ej. Práctica" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeModal('item-form-modal')" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Cancelar</button>
+                <button id="form-save" type="submit" class="bg-senaGreen hover:bg-emerald-600 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl text-sm font-bold">Guardar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox" class="fixed inset-0 z-50 bg-slate-950/90 hidden items-center justify-center p-4 cursor-zoom-out" onclick="closeModal('lightbox')">
+        <figure class="max-w-4xl">
+            <img id="lightbox-img" class="max-h-[80vh] rounded-2xl mx-auto" alt="">
+            <figcaption id="lightbox-cap" class="text-center text-slate-300 text-sm mt-3"></figcaption>
+        </figure>
+    </div>
+
+    <script>
+        const EVENT_DATE = new Date(2026, 9, 21, 0, 0, 0); // 21 de octubre de 2026
+        const EVENT_END = new Date(2026, 9, 22, 0, 0, 0);
+        const MAX_PROJECTS = 12;
+        let db = { projects: [], gallery: [] };
+        let token = sessionStorage.getItem('adm') || '';
+        let pendingLogo = null; // URL ya subida
+        let formType = 'projects';
+
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const initials = n => esc(String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?');
+        const imgSrc = u => esc(u);
+
+        function logoHtml(p, size) {
+            const fb = `<div class="${size} rounded-2xl bg-gradient-to-br from-senaDark to-senaGreen flex items-center justify-center text-white font-extrabold shrink-0">${initials(p.name)}</div>`;
+            if (!p.logo) return fb;
+            return `<img src="${imgSrc(p.logo)}" alt="Logo de ${esc(p.name)}" loading="lazy" class="${size} object-cover rounded-2xl border border-slate-700 bg-slate-950 shrink-0" onerror="this.outerHTML=this.dataset.fb" data-fb="${esc(fb)}">`;
+        }
+
+        // ---------- API ----------
+        async function api(path, method = 'GET', body) {
+            const res = await fetch(path, {
+                method,
+                headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
+                body: body ? JSON.stringify(body) : undefined
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.status === 401 && token) { token = ''; sessionStorage.removeItem('adm'); closeModal('admin-modal'); }
+            if (!res.ok) throw new Error(data.error || 'Error de servidor');
+            return data;
+        }
+
+        async function load() {
+            try { db = await api('/api/data'); } catch { showToast('Sin conexión', 'No se pudieron cargar los datos.', true); }
+            renderProjects(); renderGallery(); renderAdmin();
+        }
+
+        // ---------- Render ----------
+        function renderProjects() {
+            const q = $('project-search').value.trim().toLowerCase();
+            const list = db.projects.filter(p => (p.name + ' ' + p.author + ' ' + p.description).toLowerCase().includes(q));
+            const grid = $('projects-grid'), empty = $('projects-empty');
+            grid.innerHTML = list.map(p => `
+                <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="project-card bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-senaGreen flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-senaGreen">
+                    <div>
+                        <div class="flex items-center gap-4 mb-4">
+                            ${logoHtml(p, 'w-16 h-16 text-xl')}
+                            <div class="min-w-0">
+                                <span class="text-xs font-bold text-senaGreen uppercase tracking-wider">Proyecto 21 Octubre</span>
+                                <h3 class="text-xl font-bold text-white group-hover:text-senaGreen transition-colors break-words">${esc(p.name)}</h3>
+                            </div>
+                        </div>
+                        ${p.description ? `<p class="text-slate-300 text-sm leading-relaxed mb-6 line-clamp-3">${esc(p.description)}</p>` : ''}
+                    </div>
+                    <div class="pt-4 border-t border-slate-800 flex items-center justify-between gap-3 text-xs text-slate-400">
+                        <span class="truncate">${p.author ? `<i class="fa-solid fa-user-group text-senaGreen mr-1"></i> ${esc(p.author)}` : ''}</span>
+                        <span class="text-senaGreen font-bold flex items-center gap-1 whitespace-nowrap group-hover:translate-x-1 transition-transform">Visitar <i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                    </div>
+                </a>`).join('');
+            empty.classList.toggle('hidden', list.length > 0);
+            empty.textContent = db.projects.length ? 'No hay proyectos que coincidan con la búsqueda.' : 'Pronto publicaremos los proyectos del 21 de octubre.';
+        }
+
+        function renderGallery() {
+            $('gallery-grid').innerHTML = db.gallery.map((g, i) => `
+                <button type="button" onclick="openLightbox(${i})" class="reveal text-left bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl group focus:outline-none focus-visible:ring-2 focus-visible:ring-senaGreen">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="${imgSrc(g.image)}" alt="${esc(g.title)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400x300/0f172a/39A900?text=Foto'">
+                        ${g.category ? `<span class="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-sm text-senaGreen text-xs font-bold px-3 py-1 rounded-full border border-slate-800">${esc(g.category)}</span>` : ''}
+                    </div>
+                    <div class="p-4"><h4 class="font-bold text-white text-sm truncate">${esc(g.title)}</h4></div>
+                </button>`).join('');
+            observeReveal();
+        }
+
+        function openLightbox(i) {
+            const g = db.gallery[i]; if (!g) return;
+            $('lightbox-img').src = g.image; $('lightbox-img').alt = g.title; $('lightbox-cap').textContent = g.title;
+            openModal('lightbox');
+        }
+
+        function renderAdmin() {
+            $('admin-projects-title').textContent = `Proyectos (${db.projects.length}/${MAX_PROJECTS})`;
+            $('admin-projects-list').innerHTML = db.projects.map(p => `
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${logoHtml(p, 'w-10 h-10 text-sm')}
+                        <div class="min-w-0">
+                            <h5 class="font-bold text-white text-sm truncate">${esc(p.name)}</h5>
+                            <p class="text-xs text-slate-400 truncate">${esc(p.url)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openForm('projects','${esc(p.id)}')" aria-label="Editar" class="bg-slate-800 hover:bg-slate-700 text-senaGreen p-2 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="removeItem('projects','${esc(p.id)}')" aria-label="Eliminar" class="bg-slate-800 hover:bg-slate-700 text-red-400 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`).join('') || '<p class="text-sm text-slate-400">Aún no hay proyectos. Usa "Nuevo Proyecto".</p>';
+
+            $('admin-gallery-list').innerHTML = db.gallery.map(g => `
+                <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img src="${imgSrc(g.image)}" alt="" class="w-12 h-12 object-cover rounded-lg border border-slate-700">
+                        <div class="min-w-0"><h5 class="font-bold text-white text-xs truncate">${esc(g.title)}</h5><span class="text-[10px] text-senaGreen font-bold">${esc(g.category)}</span></div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openForm('gallery','${esc(g.id)}')" aria-label="Editar" class="bg-slate-800 hover:bg-slate-700 text-senaGreen p-2 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="removeItem('gallery','${esc(g.id)}')" aria-label="Eliminar" class="bg-slate-800 hover:bg-slate-700 text-red-400 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`).join('');
+        }
+
+        // ---------- Modales ----------
+        function openModal(id) { const m = $(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+        function closeModal(id) { const m = $(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            ['lightbox', 'item-form-modal', 'login-modal', 'admin-modal'].some(id => { if (!$(id).classList.contains('hidden')) { closeModal(id); return true; } });
+        });
+        function toggleMobileMenu() { $('mobile-menu').classList.toggle('hidden'); }
+
+        function openAdmin() {
+            if (!token) { $('login-err').classList.add('hidden'); $('login-pass').value = ''; openModal('login-modal'); $('login-pass').focus(); return; }
+            renderAdmin(); openModal('admin-modal');
+        }
+        async function doLogin(e) {
+            e.preventDefault();
+            try {
+                const r = await api('/api/login', 'POST', { password: $('login-pass').value });
+                token = r.token; sessionStorage.setItem('adm', token);
+                closeModal('login-modal'); openAdmin();
+            } catch (err) { $('login-err').textContent = err.message; $('login-err').classList.remove('hidden'); }
+        }
+        function logout() { token = ''; sessionStorage.removeItem('adm'); closeModal('admin-modal'); showToast('Sesión cerrada', 'Hasta pronto.'); }
+
+        function switchAdminTab(tab) {
+            const on = 'px-4 py-2 rounded-xl text-sm font-bold bg-senaGreen text-white';
+            const off = 'px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+            $('admin-projects-section').classList.toggle('hidden', tab !== 'projects');
+            $('admin-gallery-section').classList.toggle('hidden', tab !== 'gallery');
+            $('btn-tab-projects').className = tab === 'projects' ? on : off;
+            $('btn-tab-gallery').className = tab === 'gallery' ? on : off;
+        }
+
+        // ---------- Formularios ----------
+        function setPreview(imgEl, url) {
+            if (url) { imgEl.src = url; imgEl.classList.remove('hidden'); } else { imgEl.removeAttribute('src'); imgEl.classList.add('hidden'); }
+        }
+
+        function openForm(type, id) {
+            formType = type; pendingLogo = null;
+            const item = id ? db[type].find(x => x.id === id) : null;
+            if (type === 'projects' && !item && db.projects.length >= MAX_PROJECTS && !confirm(`Ya hay ${MAX_PROJECTS} proyectos. ¿Agregar otro de todas formas?`)) return;
+            $('fields-projects').classList.toggle('hidden', type !== 'projects');
+            $('fields-gallery').classList.toggle('hidden', type !== 'gallery');
+            $('f-id').value = item ? item.id : '';
+            $('p-logo-file').value = ''; $('g-file').value = '';
+            if (type === 'projects') {
+                $('form-title').textContent = item ? 'Editar Proyecto' : 'Nuevo Proyecto';
+                $('p-name').value = item ? item.name : ''; $('p-url').value = item ? item.url : '';
+                $('p-desc').value = item ? item.description : ''; $('p-author').value = item ? item.author : '';
+                pendingLogo = item ? item.logo : ''; setPreview($('p-logo-preview'), pendingLogo);
+            } else {
+                $('form-title').textContent = item ? 'Editar Imagen' : 'Nueva Imagen';
+                $('g-title').value = item ? item.title : ''; $('g-cat').value = item ? item.category : '';
+                pendingLogo = item ? item.image : ''; setPreview($('g-preview'), pendingLogo);
+            }
+            openModal('item-form-modal');
+        }
+
+        function fileToDataUrl(file) {
+            return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+        }
+
+        // Reduce imágenes grandes antes de subir (mantiene PNG/GIF/WEBP tal cual si ya son pequeñas)
+        async function prepareImage(file, maxSide) {
+            const dataUrl = await fileToDataUrl(file);
+            if (file.size < 600 * 1024 || file.type === 'image/gif') return dataUrl;
+            const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl; });
+            const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+            const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            return c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+        }
+
+        async function handleFile(input, previewEl, maxSide) {
+            const f = input.files[0]; if (!f) return;
+            if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { showToast('Formato no válido', 'Usa PNG, JPG, WEBP o GIF.', true); input.value = ''; return; }
+            if (f.size > 12 * 1024 * 1024) { showToast('Muy grande', 'Máximo 12 MB.', true); input.value = ''; return; }
+            $('form-save').disabled = true;
+            try {
+                const data = await prepareImage(f, maxSide);
+                const r = await api('/api/upload', 'POST', { data });
+                pendingLogo = r.url; setPreview(previewEl, r.url);
+            } catch (err) { showToast('Error', err.message, true); input.value = ''; }
+            $('form-save').disabled = false;
+        }
+        $('p-logo-file').addEventListener('change', e => handleFile(e.target, $('p-logo-preview'), 600));
+        $('g-file').addEventListener('change', e => handleFile(e.target, $('g-preview'), 1600));
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const id = $('f-id').value;
+            let body;
+            if (formType === 'projects') {
+                const url = $('p-url').value.trim();
+                if (!$('p-name').value.trim()) return showToast('Falta el nombre', 'Escribe el nombre del proyecto.', true);
+                if (!/^https?:\/\//i.test(url)) return showToast('Enlace inválido', 'Debe iniciar con http:// o https://', true);
+                body = { name: $('p-name').value, url, logo: pendingLogo || '', description: $('p-desc').value, author: $('p-author').value };
+            } else {
+                if (!$('g-title').value.trim()) return showToast('Falta el título', 'Escribe un título.', true);
+                if (!pendingLogo) return showToast('Falta la imagen', 'Selecciona una imagen.', true);
+                body = { title: $('g-title').value, image: pendingLogo, category: $('g-cat').value };
+            }
+            $('form-save').disabled = true;
+            try {
+                await api(`/api/${formType}${id ? '/' + encodeURIComponent(id) : ''}`, id ? 'PUT' : 'POST', body);
+                closeModal('item-form-modal');
+                await load();
+                showToast('Guardado', 'Los cambios ya son visibles en la página.');
+            } catch (err) { showToast('Error', err.message, true); }
+            $('form-save').disabled = false;
+        }
+
+        async function removeItem(type, id) {
+            if (!confirm('¿Eliminar este elemento?')) return;
+            try { await api(`/api/${type}/${encodeURIComponent(id)}`, 'DELETE'); await load(); showToast('Eliminado', 'El elemento fue eliminado.'); }
+            catch (err) { showToast('Error', err.message, true); }
+        }
+
+        // ---------- UI ----------
+        let toastTimer;
+        function showToast(title, msg, isError) {
+            const t = $('toast');
+            $('toast-title').textContent = title; $('toast-msg').textContent = msg;
+            $('toast-icon').className = isError ? 'fa-solid fa-circle-exclamation text-red-400 text-xl' : 'fa-solid fa-check-circle text-senaGreen text-xl';
+            t.classList.remove('translate-y-32', 'opacity-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3500);
+        }
+
+        function tick() {
+            const now = new Date();
+            if (now >= EVENT_END) { $('count-label').textContent = 'Las sustentaciones ya se realizaron. ¡Gracias por participar!'; $('count-boxes').classList.add('hidden'); return; }
+            if (now >= EVENT_DATE) { $('count-label').textContent = '¡Hoy es el día de las sustentaciones!'; $('count-boxes').classList.add('hidden'); return; }
+            let s = Math.floor((EVENT_DATE - now) / 1000);
+            $('cd-d').textContent = Math.floor(s / 86400); s %= 86400;
+            $('cd-h').textContent = String(Math.floor(s / 3600)).padStart(2, '0'); s %= 3600;
+            $('cd-m').textContent = String(Math.floor(s / 60)).padStart(2, '0');
+            $('cd-s').textContent = String(s % 60).padStart(2, '0');
+        }
+        tick(); setInterval(tick, 1000);
+        $('project-search').addEventListener('input', renderProjects);
+
+        let io;
+        function observeReveal() {
+            if (!('IntersectionObserver' in window)) { document.querySelectorAll('.reveal').forEach(el => el.classList.add('show')); return; }
+            io = io || new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('show'); io.unobserve(en.target); } }), { threshold: .1 });
+            document.querySelectorAll('.reveal:not(.show)').forEach(el => io.observe(el));
+        }
+
+        // Matrix
+        const canvas = $('matrix-canvas'), ctx = canvas.getContext('2d');
+        const chars = '01{}[]<>/\\*+-=~#PYTHONJAVASQLSENA';
+        const fs = 14; let drops = [];
+        function resizeCanvas() {
+            const h = $('inicio'); canvas.width = h.offsetWidth; canvas.height = h.offsetHeight;
+            drops = Array(Math.floor(canvas.width / fs)).fill(1);
+        }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+        setInterval(() => {
+            if (document.hidden) return;
+            ctx.fillStyle = 'rgba(15,23,42,.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#39A900'; ctx.font = fs + 'px "Fira Code", monospace';
+            drops.forEach((d, i) => {
+                ctx.fillText(chars.charAt(Math.floor(Math.random() * chars.length)), i * fs, d * fs);
+                drops[i] = (d * fs > canvas.height && Math.random() > .975) ? 0 : d + 1;
+            });
+        }, 40);
+
+        observeReveal();
+        load();
+    </script>
+</body>
+</html>
