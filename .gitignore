@@ -2,3 +2,18 @@ node_modules/
 data/
 .env
 originales/
+
+# Archivos temporales
+*.heic
+*.HEIC
+*.tmp
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de editor
+*.swp
+*.swo
+*~
