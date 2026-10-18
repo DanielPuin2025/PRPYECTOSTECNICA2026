@@ -853,6 +853,12 @@
         async function saveContent(e) {
             e.preventDefault();
             const updated = JSON.parse(JSON.stringify(db.content));
+
+            // Ensure features array has 9 slots
+            while (updated.about.features.length < 9) {
+                updated.about.features.push({ icon: 'fa-solid fa-code', title: '', description: '' });
+            }
+
             $('content-editor').querySelectorAll('[data-content-field]').forEach(field => {
                 const path = field.dataset.contentField;
                 if (path === 'about.technologies') {
@@ -868,6 +874,10 @@
                     setContentAt(updated, path, field.value);
                 }
             });
+
+            // Clean up empty features at the end
+            updated.about.features = updated.about.features.filter(f => f.title || f.description);
+
             $('content-save').disabled = true;
             try {
                 db.content = await api('/api/content', 'PUT', updated);
