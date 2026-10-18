@@ -34,7 +34,7 @@ const defaultContent = {
     primaryButton: 'Ver Proyectos 21 de Octubre',
     secondaryButton: 'Conocer Más',
     image: 'img/publicidad-cusiana.jpg',
-    slogan: '¡Tu esfuerzo hoy, abre grandes oportunidades mañana!',
+    slogan: '¡Tu esfuerzo hoy, abre grandes oportunidades para mañana!',
     cardTitle: 'Programación Megacolegio Digital',
     cardDescription: 'Articulación con la Educación Media - SENA Regional Casanare'
   },
