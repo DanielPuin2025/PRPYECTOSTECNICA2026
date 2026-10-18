@@ -857,7 +857,7 @@
                 const path = field.dataset.contentField;
                 if (path === 'about.technologies') {
                     const icons = updated.about.technologies.map(item => item.icon);
-                    const technologies = field.value.split(/\r?\n/).map(name => name.trim()).filter(Boolean).slice(0, 12);
+                    const technologies = field.value.split(/\r?\n/).map(name => name.trim()).filter(Boolean).slice(0, 15);
                     setContentAt(updated, path, technologies.map((name, index) => ({
                         icon: icons[index] || 'fa-solid fa-code text-senaGreen',
                         name
