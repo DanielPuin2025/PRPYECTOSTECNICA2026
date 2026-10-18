@@ -22,7 +22,7 @@ const defaultContent = {
     siteDescription: 'Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.',
     schoolLogo: 'img/logo_mega_ok.png',
     senaLogo: 'img/logo_sena_ok.png',
-    technicalLogo: 'img/logo-tecnica-ultimo.png',
+    technicalLogo: 'img/LOGO TECNICA 2026 SIN FONDO.png',
     kicker: 'Articulación Media',
     programName: 'Programación de Software'
   },
@@ -80,7 +80,7 @@ const defaultContent = {
     eyebrow: 'Propuesta de identidad',
     title: 'Un nuevo diseño para nuestra técnica',
     description: 'Queremos incluir este nuevo diseño para la Técnica en Programación de Software del SENA, articulada con la I.E. Megacolegio El Progreso. Una identidad que representa el talento, la creatividad y el futuro digital de nuestros estudiantes.',
-    image: 'img/logo-tecnica-ultimo.png'
+    image: 'img/LOGO TECNICA 2026 SIN FONDO.png'
   },
   profile: {
     eyebrow: 'Articulación con la Educación Media',
@@ -210,7 +210,7 @@ function normalizeContent(input) {
   const image = (section, key) => {
     const path = cleanImage(value[section]?.[key] ?? defaultContent[section][key]) || defaultContent[section][key];
     return path === 'img/logotecnicaok.jpeg' && (section === 'header' && key === 'technicalLogo' || section === 'spotlight' && key === 'image')
-      ? 'img/logo-tecnica-ultimo.png'
+      ? 'img/LOGO TECNICA 2026 SIN FONDO.png'
       : path;
   };
   const date = str(value.projects?.eventDate ?? defaultContent.projects.eventDate, 10);
