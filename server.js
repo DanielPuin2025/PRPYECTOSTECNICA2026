@@ -233,7 +233,7 @@ function normalizeContent(input) {
   };
 
   const technologies = Array.isArray(value.about?.technologies)
-    ? value.about.technologies.slice(0, 12).map((item, index) => ({
+    ? value.about.technologies.slice(0, 15).map((item, index) => ({
       icon: defaultContent.about.technologies[index]?.icon || 'fa-solid fa-code text-senaGreen',
       name: str(item?.name, 40)
     })).filter(item => item.name)
@@ -264,7 +264,7 @@ function normalizeContent(input) {
     about: {
       title: text('about', 'title', 120),
       description: text('about', 'description', 500),
-      features: cards('about', 'features', 6, 100, 400),
+      features: cards('about', 'features', 9, 100, 400),
       technologyTitle: text('about', 'technologyTitle', 120),
       technologies
     },
