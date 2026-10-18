@@ -727,9 +727,9 @@
                     field('about.title', 'Título de la sección'),
                     field('about.description', 'Descripción', { multiline: true }),
                     field('about.technologyTitle', 'Título de tecnologías'),
-                    field('about.technologies', 'Tecnologías (una por línea)', { multiline: true, rows: 6 })
+                    field('about.technologies', 'Tecnologías (una por línea, máximo 15)', { multiline: true, rows: 8 })
                 ]),
-                ...c.about.features.map((item, index) => contentGroup(`Tema ${index + 1}`, [
+                ...Array.from({ length: 9 }, (_, index) => contentGroup(`Tema ${index + 1}`, [
                     field(`about.features.${index}.title`, 'Título'),
                     field(`about.features.${index}.description`, 'Descripción', { multiline: true, rows: 3 })
                 ])),
