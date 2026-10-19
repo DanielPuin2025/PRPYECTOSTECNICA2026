@@ -70,7 +70,11 @@ const defaultContent = {
     searchPlaceholder: 'Buscar proyecto o estudiante...',
     projectLinkLabel: 'Visitar',
     emptyNoProjects: 'Pronto publicaremos los proyectos del 21 de octubre.',
-    emptyNoResults: 'No hay proyectos que coincidan con la búsqueda.'
+    emptyNoResults: 'No hay proyectos que coincidan con la búsqueda.',
+    visibilityEnabled: false,
+    visibilityDate: '2026-10-21',
+    visibilityTime: '08:00',
+    visibilityMessage: 'Los proyectos estarán disponibles el día del evento.'
   },
   gallery: {
     title: 'Galería de Momentos',
@@ -283,7 +287,11 @@ function normalizeContent(input) {
       searchPlaceholder: text('projects', 'searchPlaceholder', 120),
       projectLinkLabel: text('projects', 'projectLinkLabel', 40),
       emptyNoProjects: text('projects', 'emptyNoProjects', 200),
-      emptyNoResults: text('projects', 'emptyNoResults', 200)
+      emptyNoResults: text('projects', 'emptyNoResults', 200),
+      visibilityEnabled: value.projects?.visibilityEnabled === true,
+      visibilityDate: str(value.projects?.visibilityDate, 10) || defaultContent.projects.visibilityDate,
+      visibilityTime: str(value.projects?.visibilityTime, 5) || defaultContent.projects.visibilityTime,
+      visibilityMessage: text('projects', 'visibilityMessage', 200)
     },
     gallery: {
       title: text('gallery', 'title', 120),

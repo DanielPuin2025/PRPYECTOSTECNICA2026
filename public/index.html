@@ -589,9 +589,27 @@
         }
 
         function renderProjects() {
+            const grid = $('projects-grid'), empty = $('projects-empty');
+
+            // Check if visibility control is enabled
+            if (db.content?.projects.visibilityEnabled) {
+                const visDate = db.content.projects.visibilityDate;
+                const visTime = db.content.projects.visibilityTime;
+                const [year, month, day] = visDate.split('-').map(Number);
+                const [hour, minute] = visTime.split(':').map(Number);
+                const visibilityDateTime = new Date(year, month - 1, day, hour, minute, 0);
+                const now = new Date();
+
+                if (now < visibilityDateTime) {
+                    grid.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    empty.textContent = db.content.projects.visibilityMessage || 'Los proyectos estarán disponibles pronto.';
+                    return;
+                }
+            }
+
             const q = $('project-search').value.trim().toLowerCase();
             const list = db.projects.filter(p => (p.name + ' ' + p.author + ' ' + p.description).toLowerCase().includes(q));
-            const grid = $('projects-grid'), empty = $('projects-empty');
             grid.innerHTML = list.map(p => `
                 <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="project-card bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-senaGreen flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-senaGreen">
                     <div>
@@ -673,9 +691,20 @@
             const rawValue = contentAt(db.content, path);
             const value = Array.isArray(rawValue) ? rawValue.map(item => typeof item === 'string' ? item : item.name).join('\n') : rawValue || '';
             const fieldId = `content-${path.replace(/\./g, '-')}`;
-            const input = options.multiline
-                ? `<textarea id="${fieldId}" data-content-field="${esc(path)}" rows="${options.rows || 3}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">${esc(value)}</textarea>`
-                : `<input id="${fieldId}" type="${esc(options.type || 'text')}" data-content-field="${esc(path)}" value="${esc(value)}" maxlength="${options.type === 'date' ? 10 : options.max || 500}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">`;
+
+            let input;
+            if (options.type === 'checkbox') {
+                const checked = rawValue === true ? 'checked' : '';
+                input = `<label class="flex items-center gap-3 cursor-pointer bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 hover:border-senaGreen transition-colors">
+                    <input id="${fieldId}" type="checkbox" data-content-field="${esc(path)}" ${checked} class="w-5 h-5 rounded bg-slate-950 border-slate-700 text-senaGreen focus:ring-2 focus:ring-senaGreen">
+                    <span class="text-sm text-slate-300">${esc(options.checkboxLabel || 'Activar')}</span>
+                </label>`;
+            } else if (options.multiline) {
+                input = `<textarea id="${fieldId}" data-content-field="${esc(path)}" rows="${options.rows || 3}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">${esc(value)}</textarea>`;
+            } else {
+                input = `<input id="${fieldId}" type="${esc(options.type || 'text')}" data-content-field="${esc(path)}" value="${esc(value)}" ${options.type === 'time' ? 'step="60"' : ''} maxlength="${options.type === 'date' ? 10 : options.max || 500}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm focus:border-senaGreen focus:outline-none">`;
+            }
+
             const image = options.image ? `
                 <div class="flex items-center gap-3 mt-2">
                     <img data-content-preview="${esc(path)}" src="${imgSrc(value)}" alt="Vista previa de ${esc(label)}" class="w-16 h-16 object-contain rounded-xl border border-slate-700 bg-slate-950 p-1">
@@ -684,8 +713,8 @@
                         <input type="file" data-content-file="${esc(path)}" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden">
                     </label>
                 </div>` : '';
-            return `<div class="space-y-1">
-                <label for="${fieldId}" class="block text-xs font-bold text-slate-300 uppercase">${esc(label)}</label>
+            return `<div class="space-y-1${options.type === 'checkbox' ? ' md:col-span-2' : ''}">
+                ${options.type === 'checkbox' ? '' : `<label for="${fieldId}" class="block text-xs font-bold text-slate-300 uppercase">${esc(label)}</label>`}
                 ${input}${image}
             </div>`;
         }
@@ -749,6 +778,12 @@
                     field('projects.projectLinkLabel', 'Texto del enlace de proyecto'),
                     field('projects.emptyNoProjects', 'Mensaje sin proyectos'),
                     field('projects.emptyNoResults', 'Mensaje sin resultados')
+                ]),
+                contentGroup('Control de Visibilidad de Proyectos', [
+                    field('projects.visibilityEnabled', 'Activar control de visibilidad', { type: 'checkbox', checkboxLabel: 'Solo mostrar proyectos después de una fecha/hora específica' }),
+                    field('projects.visibilityDate', 'Fecha para mostrar proyectos', { type: 'date' }),
+                    field('projects.visibilityTime', 'Hora para mostrar proyectos', { type: 'time' }),
+                    field('projects.visibilityMessage', 'Mensaje cuando los proyectos no están disponibles')
                 ]),
                 contentGroup('Galería', [
                     field('gallery.title', 'Título'),
@@ -870,6 +905,8 @@
                     })));
                 } else if (path === 'profile.points') {
                     setContentAt(updated, path, field.value.split(/\r?\n/).map(point => point.trim()).filter(Boolean).slice(0, 8));
+                } else if (field.type === 'checkbox') {
+                    setContentAt(updated, path, field.checked);
                 } else {
                     setContentAt(updated, path, field.value);
                 }
