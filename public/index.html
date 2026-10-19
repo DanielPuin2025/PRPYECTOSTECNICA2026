@@ -600,12 +600,19 @@
                 const visibilityDateTime = new Date(year, month - 1, day, hour, minute, 0);
                 const now = new Date();
 
+                console.log('Visibility Control Active');
+                console.log('Configured Date/Time:', visibilityDateTime);
+                console.log('Current Date/Time:', now);
+                console.log('Should hide?', now < visibilityDateTime);
+
                 if (now < visibilityDateTime) {
                     grid.innerHTML = '';
                     empty.classList.remove('hidden');
                     empty.textContent = db.content.projects.visibilityMessage || 'Los proyectos estarán disponibles pronto.';
                     return;
                 }
+            } else {
+                console.log('Visibility Control Disabled or not configured');
             }
 
             const q = $('project-search').value.trim().toLowerCase();
