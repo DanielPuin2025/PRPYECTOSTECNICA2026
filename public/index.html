@@ -590,6 +590,7 @@
 
         function renderProjects() {
             const grid = $('projects-grid'), empty = $('projects-empty');
+            const searchBox = $('project-search');
 
             // Check if visibility control is enabled
             if (db.content?.projects.visibilityEnabled) {
@@ -606,16 +607,25 @@
                 console.log('Should hide?', now < visibilityDateTime);
 
                 if (now < visibilityDateTime) {
+                    // Hide all project-related elements
                     grid.innerHTML = '';
+                    grid.classList.add('hidden');
+                    searchBox.parentElement.classList.add('hidden');
                     empty.classList.remove('hidden');
                     empty.textContent = db.content.projects.visibilityMessage || 'Los proyectos estarán disponibles pronto.';
                     return;
+                } else {
+                    // Show project elements
+                    grid.classList.remove('hidden');
+                    searchBox.parentElement.classList.remove('hidden');
                 }
             } else {
                 console.log('Visibility Control Disabled or not configured');
+                grid.classList.remove('hidden');
+                searchBox.parentElement.classList.remove('hidden');
             }
 
-            const q = $('project-search').value.trim().toLowerCase();
+            const q = searchBox.value.trim().toLowerCase();
             const list = db.projects.filter(p => (p.name + ' ' + p.author + ' ' + p.description).toLowerCase().includes(q));
             grid.innerHTML = list.map(p => `
                 <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="project-card bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-senaGreen flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-senaGreen">
