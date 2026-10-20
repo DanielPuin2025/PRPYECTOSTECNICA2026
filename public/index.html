@@ -402,7 +402,7 @@
     </div>
 
     <script>
-        let EVENT_DATE = new Date(2026, 9, 21, 14, 0, 0);
+        let EVENT_DATE = new Date(2026, 9, 21, 13, 0, 0);
         let EVENT_END = new Date(2026, 9, 21, 18, 0, 0);
         const MAX_PROJECTS = 12;
         const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
@@ -517,8 +517,8 @@
             document.title = c.header.siteTitle;
             document.querySelector('meta[name="description"]').content = c.header.siteDescription;
             const eventDateParts = c.projects.eventDate.split('-').map(Number);
-            EVENT_DATE = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2]);
-            EVENT_END = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2] + 1);
+            EVENT_DATE = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2], 13, 0, 0);
+            EVENT_END = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2], 18, 0, 0);
             text('count-label', c.projects.countdownLabel);
             text('cd-label-d', c.projects.countdownDays);
             text('cd-label-h', c.projects.countdownHours);
