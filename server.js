@@ -19,7 +19,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 const defaultContent = {
   header: {
     siteTitle: 'Sustentaciones 2026 | Técnica en Programación de Software - Megacolegio El Progreso & SENA',
-    siteDescription: 'Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 21 de octubre de 2026.',
+    siteDescription: 'Proyectos de los estudiantes de la Técnica en Programación de Software, Megacolegio El Progreso & SENA Yopal. Sustentaciones 27 de octubre de 2026.',
     schoolLogo: 'img/logo_mega_ok.png',
     senaLogo: 'img/logo_sena_ok.png',
     technicalLogo: 'img/LOGO TECNICA 2026 SIN FONDO.png',
@@ -31,7 +31,7 @@ const defaultContent = {
     titlePrefix: 'Técnica en',
     titleEmphasis: 'Programación de Software',
     description: 'Crea, innova y desarrolla el futuro digital. Formamos profesionales con habilidades clave en diseño, desarrollo y pruebas de sistemas informáticos bajo metodologías ágiles en Yopal, Casanare.',
-    primaryButton: 'Ver Proyectos 21 de Octubre',
+    primaryButton: 'Ver Proyectos 27 de Octubre',
     secondaryButton: 'Conocer Más',
     image: 'img/publicidad-cusiana.jpg',
     slogan: '¡Tu esfuerzo hoy, abre grandes oportunidades para mañana!',
@@ -56,10 +56,10 @@ const defaultContent = {
     ]
   },
   projects: {
-    badge: 'Evento Especial: 21 de Octubre',
+    badge: 'Evento Especial: 27 de Octubre',
     title: 'Proyectos a Presentar',
     description: 'Conoce los proyectos desarrollados por los estudiantes de la técnica. Haz clic en cualquier tarjeta para abrir la página de cada equipo.',
-    eventDate: '2026-10-21',
+    eventDate: '2026-10-27',
     countdownLabel: 'Faltan para las sustentaciones',
     countdownToday: '¡Hoy es el día de las sustentaciones!',
     countdownDone: 'Las sustentaciones ya se realizaron. ¡Gracias por participar!',
@@ -69,10 +69,10 @@ const defaultContent = {
     countdownSeconds: 'Seg',
     searchPlaceholder: 'Buscar proyecto o estudiante...',
     projectLinkLabel: 'Visitar',
-    emptyNoProjects: 'Pronto publicaremos los proyectos del 21 de octubre.',
+    emptyNoProjects: 'Pronto publicaremos los proyectos del 27 de octubre.',
     emptyNoResults: 'No hay proyectos que coincidan con la búsqueda.',
     visibilityEnabled: false,
-    visibilityDate: '2026-10-21',
+    visibilityDate: '2026-10-27',
     visibilityTime: '08:00',
     visibilityMessage: 'Los proyectos estarán disponibles el día del evento.'
   },
