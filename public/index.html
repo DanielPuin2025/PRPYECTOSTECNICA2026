@@ -18,8 +18,8 @@
         .matrix-bg { position: relative; overflow: hidden; background: radial-gradient(circle at center, #00324d 0%, #0a0f1e 100%); }
         .matrix-bg::before {
             content: ""; position: absolute; inset: 0;
-            background: url('img/logo-cusiana-sin-fondo.png') center / min(78vw, 720px) auto no-repeat;
-            opacity: .4; pointer-events: none;
+            background: url('img/logo-cusiana-sin-fondo.png') left 4% center / min(46vw, 560px) auto no-repeat;
+            opacity: .3; pointer-events: none;
         }
         #matrix-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .18; z-index: 1; }
         .hero-content { position: relative; z-index: 2; }
@@ -402,7 +402,7 @@
     </div>
 
     <script>
-        let EVENT_DATE = new Date(2026, 9, 27, 13, 0, 0);
+        let EVENT_DATE = new Date(2026, 9, 27, 9, 0, 0);
         let EVENT_END = new Date(2026, 9, 27, 18, 0, 0);
         const MAX_PROJECTS = 12;
         const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
@@ -517,7 +517,7 @@
             document.title = c.header.siteTitle;
             document.querySelector('meta[name="description"]').content = c.header.siteDescription;
             const eventDateParts = c.projects.eventDate.split('-').map(Number);
-            EVENT_DATE = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2], 13, 0, 0);
+            EVENT_DATE = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2], 9, 0, 0);
             EVENT_END = new Date(eventDateParts[0], eventDateParts[1] - 1, eventDateParts[2], 18, 0, 0);
             text('count-label', c.projects.countdownLabel);
             text('cd-label-d', c.projects.countdownDays);
