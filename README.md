@@ -45,7 +45,9 @@ $env:JUDGE_5_PIN = "pin_unico_jurado_5"
 $env:DATA_DIR = ".\data"
 ```
 
-El servidor lee variables de entorno del proceso y no carga automáticamente archivos `.env`. En Linux/macOS, usa `export VARIABLE=valor` antes de `npm start`, o configura estas variables en el servicio de alojamiento. Usa un PIN distinto para cada jurado, no los guardes en archivos públicos ni en el código. Los intentos fallidos tienen límite; para que los jurados puedan entrar, los cinco PIN deben estar definidos antes de iniciar el servidor.
+El servidor lee variables de entorno del proceso y no carga automáticamente archivos `.env`. En Linux/macOS, usa `export VARIABLE=valor` antes de `npm start`, o configura estas variables en el servicio de alojamiento. Usa un PIN distinto para cada jurado y no los guardes en archivos públicos ni en el código. Los intentos fallidos tienen límite.
+
+Los PIN iniciales se pueden omitir y configurar después desde el panel de administración. Si defines `JUDGE_1_PIN` a `JUDGE_5_PIN`, el servidor los usa como acceso inicial mientras no se cambien desde el panel.
 
 4. Iniciar el servidor:
 ```bash
@@ -71,6 +73,7 @@ Para acceder al panel de administración:
 - **Galería**: Subir imágenes de eventos (máximo 4MB por imagen)
 - **Contenido**: Editar todos los textos, títulos y descripciones del sitio
 - **Calificaciones**: Consultar las notas de cada jurado, el total y promedio de sus 10 criterios, el promedio final del proyecto y su puesto. El ranking se calcula cuando los cinco jurados califican.
+- **PIN de jurados**: Crear o cambiar individualmente cada PIN desde la pestaña correspondiente. El panel nunca muestra los PIN existentes; se almacenan como hashes protegidos en `DATA_DIR/db.json`. Cambiar un PIN cierra la sesión activa de ese jurado y prevalece sobre su variable de entorno inicial.
 - **Exportar resultados**: En la pestaña Calificaciones, descarga un CSV compatible con Excel (incluye las 10 notas de cada jurado) o usa Exportar PDF y elige “Guardar como PDF” en el diálogo de impresión.
 - **Features**: Agregar hasta 9 características en "¿De qué se trata?"
 - **Tecnologías**: Listar hasta 15 tecnologías que se enseñan

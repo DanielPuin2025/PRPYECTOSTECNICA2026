@@ -342,6 +342,7 @@
                 <div class="flex flex-wrap gap-3 border-b border-slate-800 pb-4">
                     <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 rounded-xl text-sm font-bold bg-senaGreen text-white"><i class="fa-solid fa-rocket mr-2"></i> Proyectos (27 Oct)</button>
                     <button onclick="switchAdminTab('evaluations')" id="btn-tab-evaluations" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-clipboard-check mr-2"></i> Calificaciones</button>
+                    <button onclick="switchAdminTab('judges')" id="btn-tab-judges" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-key mr-2"></i> PIN de jurados</button>
                     <button onclick="switchAdminTab('gallery')" id="btn-tab-gallery" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-images mr-2"></i> Galería</button>
                     <button onclick="switchAdminTab('content')" id="btn-tab-content" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-pen-to-square mr-2"></i> Contenido del sitio</button>
                 </div>
@@ -369,6 +370,13 @@
                         <div id="evaluation-podium" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-5"></div>
                     </div>
                     <div id="evaluation-results" class="overflow-x-auto rounded-xl border border-slate-800"></div>
+                </div>
+                <div id="admin-judges-section" class="hidden space-y-5">
+                    <div>
+                        <h4 class="text-white font-bold text-lg">Cambiar PIN de jurados</h4>
+                        <p class="mt-1 text-xs text-slate-400">Los PIN se almacenan protegidos en el servidor. Al cambiar uno, se cerrará la sesión activa de ese jurado.</p>
+                    </div>
+                    <div id="judge-pins-list" class="grid gap-4 md:grid-cols-2"></div>
                 </div>
                 <div id="admin-gallery-section" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
@@ -886,6 +894,45 @@
                 </table>` : '<p class="p-5 text-sm text-slate-400">Aún no hay proyectos para mostrar.</p>';
         }
 
+        async function loadJudgePins() {
+            try {
+                const judges = await api('/api/judge-pins');
+                $('judge-pins-list').innerHTML = judges.map(judge => `
+                    <form onsubmit="saveJudgePin(event, ${judge.judgeNumber})" class="space-y-3 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <h5 class="font-bold text-white">Jurado ${judge.judgeNumber}</h5>
+                            <span class="rounded-full px-3 py-1 text-[10px] font-bold ${judge.configured ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}">${judge.configured ? 'PIN configurado' : 'Falta configurar'}</span>
+                        </div>
+                        <label for="judge-pin-${judge.judgeNumber}" class="block text-xs font-semibold text-slate-300">Nuevo PIN (mínimo 8 caracteres)</label>
+                        <input id="judge-pin-${judge.judgeNumber}" type="password" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="Escribe el nuevo PIN" class="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
+                        <button id="judge-pin-save-${judge.judgeNumber}" type="submit" class="w-full rounded-xl bg-senaGreen px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"><i class="fa-solid fa-key mr-2"></i>Guardar PIN del Jurado ${judge.judgeNumber}</button>
+                    </form>`).join('');
+            } catch (error) {
+                showToast('No se pudieron cargar los PIN', error.message, true);
+            }
+        }
+
+        async function saveJudgePin(event, judgeNumber) {
+            event.preventDefault();
+            const input = $(`judge-pin-${judgeNumber}`);
+            const button = $(`judge-pin-save-${judgeNumber}`);
+            const pin = input.value;
+            if (pin.length < 8 || pin.length > 128 || pin.trim() !== pin) {
+                showToast('PIN no válido', 'Debe tener entre 8 y 128 caracteres y no iniciar ni terminar con espacios.', true);
+                return;
+            }
+            button.disabled = true;
+            try {
+                await api('/api/judge-pins', 'PUT', { judgeNumber, pin });
+                await loadJudgePins();
+                showToast('PIN actualizado', `El nuevo PIN del Jurado ${judgeNumber} quedó guardado. Su sesión anterior se cerró.`);
+            } catch (error) {
+                showToast('No se pudo cambiar el PIN', error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
         function evaluationExportRows() {
             return buildEvaluationRows();
         }
@@ -1190,13 +1237,16 @@
             const off = 'px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
             $('admin-projects-section').classList.toggle('hidden', tab !== 'projects');
             $('admin-evaluations-section').classList.toggle('hidden', tab !== 'evaluations');
+            $('admin-judges-section').classList.toggle('hidden', tab !== 'judges');
             $('admin-gallery-section').classList.toggle('hidden', tab !== 'gallery');
             $('admin-content-section').classList.toggle('hidden', tab !== 'content');
             $('btn-tab-projects').className = tab === 'projects' ? on : off;
             $('btn-tab-evaluations').className = tab === 'evaluations' ? on : off;
+            $('btn-tab-judges').className = tab === 'judges' ? on : off;
             $('btn-tab-gallery').className = tab === 'gallery' ? on : off;
             $('btn-tab-content').className = tab === 'content' ? on : off;
             if (tab === 'evaluations') loadEvaluations();
+            if (tab === 'judges') loadJudgePins();
         }
 
         async function handleContentImage(input) {

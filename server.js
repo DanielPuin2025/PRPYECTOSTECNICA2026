@@ -129,6 +129,7 @@ const defaultDb = {
   content: defaultContent,
   spotlightVotes: [],
   evaluations: [],
+  judgePinHashes: {},
   gallery: [
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
@@ -152,6 +153,10 @@ if (!Array.isArray(db.spotlightVotes)) {
 }
 if (!Array.isArray(db.evaluations)) {
   db.evaluations = [];
+  save();
+}
+if (!db.judgePinHashes || typeof db.judgePinHashes !== 'object' || Array.isArray(db.judgePinHashes)) {
+  db.judgePinHashes = {};
   save();
 }
 
@@ -217,6 +222,23 @@ function safeEqual(a, b) {
   const ha = crypto.createHash('sha256').update(a).digest();
   const hb = crypto.createHash('sha256').update(b).digest();
   return crypto.timingSafeEqual(ha, hb);
+}
+
+function judgePinMatches(judgeNumber, pin) {
+  const stored = db.judgePinHashes[String(judgeNumber)];
+  if (stored && /^[\da-f]{64}$/i.test(stored.salt || '') && /^[\da-f]{128}$/i.test(stored.hash || '')) {
+    const hash = crypto.scryptSync(pin, Buffer.from(stored.salt, 'hex'), 64);
+    return crypto.timingSafeEqual(hash, Buffer.from(stored.hash, 'hex'));
+  }
+  const configuredPin = process.env[`JUDGE_${judgeNumber}_PIN`] || '';
+  return Boolean(configuredPin) && safeEqual(pin, configuredPin);
+}
+
+function judgePinIsConfigured(judgeNumber) {
+  const stored = db.judgePinHashes[String(judgeNumber)];
+  return Boolean(
+    stored && /^[\da-f]{64}$/i.test(stored.salt || '') && /^[\da-f]{128}$/i.test(stored.hash || '')
+  ) || Boolean(process.env[`JUDGE_${judgeNumber}_PIN`]);
 }
 
 function cleanUrl(u) {
@@ -461,9 +483,8 @@ async function handleApi(req, res, url) {
     if (!Number.isInteger(judgeNumber) || judgeNumber < 1 || judgeNumber > 5) {
       return send(res, 400, { error: 'Selecciona un jurado válido.' });
     }
-    const pin = process.env[`JUDGE_${judgeNumber}_PIN`] || '';
-    if (!pin) return send(res, 503, { error: `El PIN del Jurado ${judgeNumber} aún no está configurado.` });
-    if (!safeEqual(String(body.pin || ''), pin)) {
+    if (!judgePinIsConfigured(judgeNumber)) return send(res, 503, { error: `El PIN del Jurado ${judgeNumber} aún no está configurado.` });
+    if (!judgePinMatches(judgeNumber, String(body.pin || ''))) {
       a.n++; attempts.set(`judge:${ip}`, a);
       return send(res, 401, { error: 'PIN incorrecto.' });
     }
@@ -516,6 +537,35 @@ async function handleApi(req, res, url) {
   }
 
   if (!isAuth(req)) return send(res, 401, { error: 'No autorizado' });
+
+  if (url.pathname === '/api/judge-pins' && method === 'GET') {
+    const judges = Array.from({ length: 5 }, (_, index) => {
+      const judgeNumber = index + 1;
+      return { judgeNumber, configured: judgePinIsConfigured(judgeNumber) };
+    });
+    return send(res, 200, judges, { 'Cache-Control': 'no-store' });
+  }
+
+  if (url.pathname === '/api/judge-pins' && method === 'PUT') {
+    let body;
+    try { body = JSON.parse(await readBody(req, 2000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const judgeNumber = Number(body.judgeNumber);
+    const pin = typeof body.pin === 'string' ? body.pin : '';
+    if (!Number.isInteger(judgeNumber) || judgeNumber < 1 || judgeNumber > 5) {
+      return send(res, 400, { error: 'Selecciona un jurado válido.' });
+    }
+    if (pin.length < 8 || pin.length > 128 || pin.trim() !== pin) {
+      return send(res, 400, { error: 'El PIN debe tener entre 8 y 128 caracteres y no iniciar ni terminar con espacios.' });
+    }
+    const salt = crypto.randomBytes(32);
+    const hash = crypto.scryptSync(pin, salt, 64);
+    db.judgePinHashes[String(judgeNumber)] = { salt: salt.toString('hex'), hash: hash.toString('hex') };
+    save();
+    for (const [sessionToken, session] of judgeSessions) {
+      if (session.judgeNumber === judgeNumber) judgeSessions.delete(sessionToken);
+    }
+    return send(res, 200, { judgeNumber, configured: true });
+  }
 
   if (url.pathname === '/api/evaluations' && method === 'GET') {
     return send(res, 200, db.evaluations, { 'Cache-Control': 'no-store' });
