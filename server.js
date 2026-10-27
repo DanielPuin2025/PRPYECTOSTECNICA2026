@@ -11,6 +11,18 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const MAX_UPLOAD = 4 * 1024 * 1024;
+const RUBRIC_ITEMS = [
+  'Definición del problema o tema',
+  'Objetivos del proyecto',
+  'Investigación y fundamentación',
+  'Planificación y cronograma',
+  'Ejecución del proyecto',
+  'Productos o resultados',
+  'Innovación y creatividad',
+  'Organización del contenido',
+  'Uso adecuado de recursos visuales',
+  'Claridad y fluidez en la expresión oral'
+];
 
 if (!ADMIN_PASSWORD) console.warn('ADVERTENCIA: define ADMIN_PASSWORD o nadie podrá administrar.');
 
@@ -116,6 +128,7 @@ const defaultDb = {
   projects: [],
   content: defaultContent,
   spotlightVotes: [],
+  evaluations: [],
   gallery: [
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
@@ -137,6 +150,10 @@ if (!Array.isArray(db.spotlightVotes)) {
   db.spotlightVotes = [];
   save();
 }
+if (!Array.isArray(db.evaluations)) {
+  db.evaluations = [];
+  save();
+}
 
 function save() {
   const tmp = DB_FILE + '.tmp';
@@ -145,6 +162,7 @@ function save() {
 }
 
 const sessions = new Map(); // token -> expiry
+const judgeSessions = new Map(); // token -> { judgeNumber, expiry }
 const attempts = new Map(); // ip -> {n, t}
 
 const MIME = {
@@ -182,6 +200,17 @@ function isAuth(req) {
   if (!exp) return false;
   if (exp < Date.now()) { sessions.delete(t); return false; }
   return true;
+}
+
+function judgeSession(req) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  const session = judgeSessions.get(token);
+  if (!session) return null;
+  if (session.expiry < Date.now()) {
+    judgeSessions.delete(token);
+    return null;
+  }
+  return session;
 }
 
 function safeEqual(a, b) {
@@ -421,7 +450,76 @@ async function handleApi(req, res, url) {
     return send(res, 200, { token });
   }
 
+  if (url.pathname === '/api/judge-login' && method === 'POST') {
+    const ip = req.socket.remoteAddress;
+    const a = attempts.get(`judge:${ip}`) || { n: 0, t: Date.now() };
+    if (Date.now() - a.t > 15 * 60 * 1000) { a.n = 0; a.t = Date.now(); }
+    if (a.n >= 8) return send(res, 429, { error: 'Demasiados intentos. Espera unos minutos.' });
+    let body;
+    try { body = JSON.parse(await readBody(req, 2000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const judgeNumber = Number(body.judgeNumber);
+    if (!Number.isInteger(judgeNumber) || judgeNumber < 1 || judgeNumber > 5) {
+      return send(res, 400, { error: 'Selecciona un jurado válido.' });
+    }
+    const pin = process.env[`JUDGE_${judgeNumber}_PIN`] || '';
+    if (!pin) return send(res, 503, { error: `El PIN del Jurado ${judgeNumber} aún no está configurado.` });
+    if (!safeEqual(String(body.pin || ''), pin)) {
+      a.n++; attempts.set(`judge:${ip}`, a);
+      return send(res, 401, { error: 'PIN incorrecto.' });
+    }
+    attempts.delete(`judge:${ip}`);
+    const token = crypto.randomBytes(32).toString('hex');
+    judgeSessions.set(token, { judgeNumber, expiry: Date.now() + 8 * 3600 * 1000 });
+    return send(res, 200, { token, judgeNumber });
+  }
+
+  if (url.pathname === '/api/judge-evaluations' && method === 'GET') {
+    const judge = judgeSession(req);
+    if (!judge) return send(res, 401, { error: 'La sesión del jurado venció. Ingresa de nuevo.' });
+    const submittedProjects = db.evaluations
+      .filter(item => item.judgeNumber === judge.judgeNumber)
+      .map(item => ({ projectId: item.projectId }));
+    return send(res, 200, submittedProjects, { 'Cache-Control': 'no-store' });
+  }
+
+  if (url.pathname === '/api/evaluations' && method === 'POST') {
+    const judge = judgeSession(req);
+    if (!judge) return send(res, 401, { error: 'La sesión del jurado venció. Ingresa de nuevo.' });
+    let body;
+    try { body = JSON.parse(await readBody(req, 5000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const projectId = str(body.projectId, 80);
+    const project = db.projects.find(item => item.id === projectId);
+    if (!project) return send(res, 404, { error: 'El proyecto ya no está disponible para calificar.' });
+    if (db.evaluations.some(item => item.projectId === projectId && item.judgeNumber === judge.judgeNumber)) {
+      return send(res, 409, { error: 'Este jurado ya calificó el proyecto. Las notas registradas son inmutables.' });
+    }
+    if (!Array.isArray(body.scores) || body.scores.length !== RUBRIC_ITEMS.length
+      || body.scores.some(score => typeof score !== 'number' || !Number.isFinite(score) || score < 1 || score > 5)) {
+      return send(res, 400, { error: 'Debes ingresar las 10 notas entre 1 y 5, aceptando decimales.' });
+    }
+    const scores = body.scores.map(score => Math.round(score * 100) / 100);
+    const total = Math.round(scores.reduce((sum, score) => sum + score, 0) * 100) / 100;
+    const evaluation = {
+      id: crypto.randomUUID(),
+      projectId,
+      projectName: project.name,
+      author: project.author,
+      judgeNumber: judge.judgeNumber,
+      scores,
+      total,
+      average: Math.round(total / RUBRIC_ITEMS.length * 100) / 100,
+      submittedAt: new Date().toISOString()
+    };
+    db.evaluations.push(evaluation);
+    save();
+    return send(res, 201, { ok: true, projectId });
+  }
+
   if (!isAuth(req)) return send(res, 401, { error: 'No autorizado' });
+
+  if (url.pathname === '/api/evaluations' && method === 'GET') {
+    return send(res, 200, db.evaluations, { 'Cache-Control': 'no-store' });
+  }
 
   if (url.pathname === '/api/content' && method === 'PUT') {
     let body;

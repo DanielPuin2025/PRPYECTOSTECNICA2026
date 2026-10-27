@@ -8,13 +8,16 @@ Página web para las sustentaciones de proyectos de los estudiantes de la Técni
 - **Galería de Imágenes**: Sección para mostrar fotos de eventos y actividades
 - **Contenido Editable**: Todo el contenido del sitio es editable desde el panel de admin
 - **Sistema de Votación**: Los usuarios pueden calificar el logo de la técnica
+- **Calificación de proyectos**: Cinco jurados ingresan con PIN individual y califican 10 criterios de 1 a 5, con decimales
+- **Resultados y ranking**: El administrador consulta los promedios por jurado, el promedio final por proyecto y los cinco primeros lugares
+- **Exportación**: Descarga los resultados en CSV compatible con Excel o imprime/guarda el reporte como PDF
 - **Contador Regresivo**: Cuenta regresiva hasta el evento de sustentaciones
 - **Responsive**: Diseño adaptable a todos los dispositivos
 - **Actualización en Tiempo Real**: Los cambios se reflejan inmediatamente en todos los dispositivos
 
 ## 📋 Requisitos
 
-- Node.js 14 o superior
+- Node.js 18 o superior
 - Puerto 3000 disponible (configurable)
 
 ## 🛠️ Instalación
@@ -30,13 +33,19 @@ cd PRPYECTOSTECNICA2026
 npm install
 ```
 
-3. Configurar variables de entorno (opcional):
-```bash
-# Crear archivo .env
-PORT=3000
-ADMIN_PASSWORD=tu_contraseña_segura
-DATA_DIR=./data
+3. Configura las variables de entorno antes de iniciar el servidor. En PowerShell (Windows):
+```powershell
+$env:PORT = "3000"
+$env:ADMIN_PASSWORD = "tu_contraseña_segura"
+$env:JUDGE_1_PIN = "pin_unico_jurado_1"
+$env:JUDGE_2_PIN = "pin_unico_jurado_2"
+$env:JUDGE_3_PIN = "pin_unico_jurado_3"
+$env:JUDGE_4_PIN = "pin_unico_jurado_4"
+$env:JUDGE_5_PIN = "pin_unico_jurado_5"
+$env:DATA_DIR = ".\data"
 ```
+
+El servidor lee variables de entorno del proceso y no carga automáticamente archivos `.env`. En Linux/macOS, usa `export VARIABLE=valor` antes de `npm start`, o configura estas variables en el servicio de alojamiento. Usa un PIN distinto para cada jurado, no los guardes en archivos públicos ni en el código. Los intentos fallidos tienen límite; para que los jurados puedan entrar, los cinco PIN deben estar definidos antes de iniciar el servidor.
 
 4. Iniciar el servidor:
 ```bash
@@ -61,8 +70,14 @@ Para acceder al panel de administración:
 - **Proyectos**: Agregar hasta 12 proyectos con logo, descripción, autor y URL
 - **Galería**: Subir imágenes de eventos (máximo 4MB por imagen)
 - **Contenido**: Editar todos los textos, títulos y descripciones del sitio
+- **Calificaciones**: Consultar las notas de cada jurado, el total y promedio de sus 10 criterios, el promedio final del proyecto y su puesto. El ranking se calcula cuando los cinco jurados califican.
+- **Exportar resultados**: En la pestaña Calificaciones, descarga un CSV compatible con Excel (incluye las 10 notas de cada jurado) o usa Exportar PDF y elige “Guardar como PDF” en el diálogo de impresión.
 - **Features**: Agregar hasta 9 características en "¿De qué se trata?"
 - **Tecnologías**: Listar hasta 15 tecnologías que se enseñan
+
+Cada PIN solo puede registrar una calificación por proyecto. Las notas guardadas son inmutables: no existe una opción en la aplicación para editarlas o borrarlas. Eliminar un proyecto no elimina sus resultados; quedan en el panel y las exportaciones como proyecto archivado. Mantén persistente y con copias de seguridad el directorio configurado en `DATA_DIR` (por defecto `data/`), especialmente en despliegues con Docker o Easypanel.
+
+Los jurados no pueden consultar promedios, notas consolidadas ni puestos: el panel y las exportaciones de resultados requieren autenticación de administrador. Después de calificar, el jurado solo ve la confirmación de guardado y el estado «Ya calificado» para ese proyecto.
 
 ## 📁 Estructura del Proyecto
 
@@ -96,8 +111,9 @@ docker run -p 3000:3000 -e ADMIN_PASSWORD=tu_contraseña megacolegio-proyectos
 1. Conectar repositorio de GitHub
 2. Configurar variables de entorno:
    - `ADMIN_PASSWORD`: Contraseña del panel de admin
+   - `JUDGE_1_PIN` a `JUDGE_5_PIN`: PIN individual para cada jurado
    - `PORT`: 3000 (o el puerto configurado)
-3. Configurar persistencia de datos en `/app/data`
+3. Configurar persistencia de datos en `/app/data`; allí quedan los proyectos y las calificaciones
 4. Desplegar
 
 ## 🔄 Actualización de Contenido
