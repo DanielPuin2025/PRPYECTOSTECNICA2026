@@ -291,9 +291,7 @@
         <form onsubmit="doJudgeLogin(event)" class="w-full max-w-sm space-y-4 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
             <h3 class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-solid fa-clipboard-check text-senaGreen"></i> Acceso de jurado</h3>
             <label for="judge-number" class="block text-xs font-bold uppercase text-slate-300">Jurado</label>
-            <select id="judge-number" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
-                <option value="1">Jurado 1</option><option value="2">Jurado 2</option><option value="3">Jurado 3</option><option value="4">Jurado 4</option><option value="5">Jurado 5</option>
-            </select>
+            <select id="judge-number" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none"></select>
             <label for="judge-pin" class="block text-xs font-bold uppercase text-slate-300">PIN individual</label>
             <input id="judge-pin" type="password" required autocomplete="current-password" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
             <p id="judge-login-err" class="hidden text-xs text-red-400"></p>
@@ -342,7 +340,7 @@
                 <div class="flex flex-wrap gap-3 border-b border-slate-800 pb-4">
                     <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 rounded-xl text-sm font-bold bg-senaGreen text-white"><i class="fa-solid fa-rocket mr-2"></i> Proyectos (27 Oct)</button>
                     <button onclick="switchAdminTab('evaluations')" id="btn-tab-evaluations" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-clipboard-check mr-2"></i> Calificaciones</button>
-                    <button onclick="switchAdminTab('judges')" id="btn-tab-judges" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-key mr-2"></i> PIN de jurados</button>
+                    <button onclick="switchAdminTab('judges')" id="btn-tab-judges" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-users-gear mr-2"></i> Jurados</button>
                     <button onclick="switchAdminTab('gallery')" id="btn-tab-gallery" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-images mr-2"></i> Galería</button>
                     <button onclick="switchAdminTab('content')" id="btn-tab-content" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-pen-to-square mr-2"></i> Contenido del sitio</button>
                 </div>
@@ -357,7 +355,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h4 class="text-white font-bold text-lg">Resultados de sustentación</h4>
-                            <p class="text-xs text-slate-400 mt-1">El puesto final se calcula cuando los cinco jurados han calificado el proyecto.</p>
+                            <p id="evaluation-status-description" class="text-xs text-slate-400 mt-1">El promedio final y el ranking incluyen a los jurados activos.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="exportEvaluationsCsv()" class="rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-600"><i class="fa-solid fa-file-excel mr-2"></i>Excel (CSV)</button>
@@ -373,8 +371,27 @@
                 </div>
                 <div id="admin-judges-section" class="hidden space-y-5">
                     <div>
-                        <h4 class="text-white font-bold text-lg">Cambiar PIN de jurados</h4>
-                        <p class="mt-1 text-xs text-slate-400">Los PIN se almacenan protegidos en el servidor. Al cambiar uno, se cerrará la sesión activa de ese jurado.</p>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h4 class="text-white font-bold text-lg">Administrar jurados</h4>
+                                <p id="active-judges-summary" class="mt-1 text-xs text-slate-400">Los promedios se calculan con los jurados activos.</p>
+                            </div>
+                            <button type="button" onclick="showAddJudgeForm()" class="rounded-xl bg-senaGreen px-4 py-2 text-xs font-bold text-white hover:bg-emerald-600"><i class="fa-solid fa-user-plus mr-2"></i>Adicionar jurado</button>
+                        </div>
+                    </div>
+                    <div id="add-judge-form" class="hidden rounded-2xl border border-senaGreen/30 bg-slate-950 p-4">
+                        <form onsubmit="addJudge(event)" class="grid gap-3 sm:grid-cols-2">
+                            <label class="text-xs font-semibold text-slate-300">Nombre del jurado
+                                <input id="new-judge-name" required maxlength="60" class="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
+                            </label>
+                            <label class="text-xs font-semibold text-slate-300">PIN (mínimo 8 caracteres)
+                                <input id="new-judge-pin" type="password" required minlength="8" maxlength="128" autocomplete="new-password" class="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
+                            </label>
+                            <div class="flex justify-end gap-2 sm:col-span-2">
+                                <button type="button" onclick="hideAddJudgeForm()" class="rounded-xl bg-slate-800 px-4 py-2 text-xs font-semibold text-white">Cancelar</button>
+                                <button id="add-judge-submit" type="submit" class="rounded-xl bg-senaGreen px-4 py-2 text-xs font-bold text-white disabled:opacity-60">Agregar jurado</button>
+                            </div>
+                        </form>
                     </div>
                     <div id="judge-pins-list" class="grid gap-4 md:grid-cols-2"></div>
                 </div>
@@ -493,6 +510,8 @@
         let token = sessionStorage.getItem('adm') || '';
         let judgeToken = sessionStorage.getItem('judge-token') || '';
         let judgeNumber = Number(sessionStorage.getItem('judge-number')) || 0;
+        let judges = [];
+        let activeJudges = [];
         let selectedEvaluationProjectId = '';
         let judgeEvaluations = [];
         let evaluations = [];
@@ -548,6 +567,7 @@
 
         async function load() {
             try { db = await api('/api/data'); } catch { showToast('Sin conexión', 'No se pudieron cargar los datos.', true); }
+            await loadActiveJudges();
             if (judgeToken) {
                 try {
                     judgeEvaluations = await judgeApi('/api/judge-evaluations');
@@ -558,6 +578,23 @@
             if (db.content) applyContent();
             renderProjects(); renderGallery(); renderAdmin();
             await loadSpotlightVotes();
+        }
+
+        async function loadActiveJudges() {
+            try {
+                activeJudges = await api('/api/judges');
+                $('judge-number').innerHTML = activeJudges.map(judge =>
+                    `<option value="${judge.judgeNumber}">${esc(judge.name)}</option>`
+                ).join('');
+            } catch (error) {
+                showToast('No se pudo cargar la lista de jurados', error.message, true);
+            }
+        }
+
+        function judgeDisplayName(judgeNumber) {
+            return activeJudges.find(judge => judge.judgeNumber === judgeNumber)?.name
+                || judges.find(judge => judge.judgeNumber === judgeNumber)?.name
+                || `Jurado ${judgeNumber}`;
         }
 
         function storedSpotlightVoterId() {
@@ -699,7 +736,7 @@
             const grid = $('projects-grid'), empty = $('projects-empty');
             const searchBox = $('project-search');
             $('judge-session-control').classList.toggle('hidden', !judgeToken);
-            if (judgeToken) $('judge-session-label').textContent = `Sesión activa: Jurado ${judgeNumber}`;
+            if (judgeToken) $('judge-session-label').textContent = `Sesión activa: ${esc(judgeDisplayName(judgeNumber))}`;
 
             // Check if visibility control is enabled
             if (db.content?.projects.visibilityEnabled) {
@@ -822,14 +859,14 @@
         function buildEvaluationRows() {
             const projectsById = new Map(db.projects.map(project => [project.id, project]));
             const rowsById = new Map();
-            db.projects.forEach(project => rowsById.set(project.id, { id: project.id, name: project.name, author: project.author, judges: Array(5).fill(null) }));
+            const orderedJudges = judges.slice().sort((a, b) => a.judgeNumber - b.judgeNumber);
+            db.projects.forEach(project => rowsById.set(project.id, { id: project.id, name: project.name, author: project.author }));
             evaluations.forEach(item => {
                 if (!rowsById.has(item.projectId)) {
                     rowsById.set(item.projectId, {
                         id: item.projectId,
                         name: item.projectName || 'Proyecto archivado',
-                        author: item.author || '',
-                        judges: Array(5).fill(null)
+                        author: item.author || ''
                     });
                 }
                 const row = rowsById.get(item.projectId);
@@ -838,14 +875,24 @@
                     row.name = currentProject.name;
                     row.author = currentProject.author;
                 }
-                if (Number.isInteger(item.judgeNumber) && item.judgeNumber >= 1 && item.judgeNumber <= 5) row.judges[item.judgeNumber - 1] = item;
             });
             const rows = [...rowsById.values()].map(row => {
-                const complete = row.judges.every(Boolean);
+                row.judges = orderedJudges.map(judge => ({
+                    ...judge,
+                    evaluation: evaluations.find(item => item.projectId === row.id && item.judgeNumber === judge.judgeNumber) || null
+                }));
+                const activeEvaluations = row.judges.filter(judge => judge.active).map(judge => judge.evaluation);
+                const complete = activeEvaluations.length > 0 && activeEvaluations.every(Boolean);
                 const finalAverage = complete
-                    ? Math.round(row.judges.reduce((sum, item) => sum + item.average, 0) / 5 * 100) / 100
+                    ? Math.round(activeEvaluations.reduce((sum, item) => sum + item.average, 0) / activeEvaluations.length * 100) / 100
                     : null;
-                return Object.assign(row, { complete, finalAverage, place: null });
+                return Object.assign(row, {
+                    complete,
+                    finalAverage,
+                    place: null,
+                    completedActiveJudges: activeEvaluations.filter(Boolean).length,
+                    activeJudgeCount: activeEvaluations.length
+                });
             });
             const ranked = rows.filter(row => row.complete).sort((a, b) => b.finalAverage - a.finalAverage || a.name.localeCompare(b.name, 'es'));
             ranked.forEach((row, index) => {
@@ -859,8 +906,9 @@
         }
 
         function loadEvaluations() {
-            return api('/api/evaluations').then(data => {
-                evaluations = data;
+            return Promise.all([api('/api/evaluations'), api('/api/admin/judges')]).then(([resultData, judgeData]) => {
+                evaluations = resultData;
+                judges = judgeData;
                 renderEvaluations();
             }).catch(error => showToast('No se pudieron cargar las calificaciones', error.message, true));
         }
@@ -868,27 +916,29 @@
         function renderEvaluations() {
             const rows = buildEvaluationRows();
             const complete = rows.filter(row => row.complete);
+            const activeCount = judges.filter(judge => judge.active).length;
+            $('evaluation-status-description').textContent = `El promedio final y el ranking incluyen los ${activeCount} jurados activos. Solo participan proyectos calificados por todos ellos.`;
             $('evaluation-podium').innerHTML = complete.slice(0, 5).map(row => `
                 <div class="rounded-xl border border-senaGreen/30 bg-slate-950 p-3">
                     <p class="text-[10px] font-bold uppercase text-senaGreen">${row.place === 1 ? 'Primer' : row.place === 2 ? 'Segundo' : row.place === 3 ? 'Tercer' : row.place === 4 ? 'Cuarto' : 'Quinto'} lugar</p>
                     <p class="mt-1 truncate text-sm font-bold text-white" title="${esc(row.name)}">${esc(row.name)}</p>
                     <p class="text-xs text-slate-300">${row.finalAverage.toFixed(2)} / 5</p>
-                </div>`).join('') || '<p class="text-sm text-slate-400 sm:col-span-2">Aún no hay proyectos con las cinco calificaciones completas.</p>';
+                </div>`).join('') || '<p class="text-sm text-slate-400 sm:col-span-2">Aún no hay proyectos calificados por todos los jurados activos.</p>';
             $('evaluation-results').innerHTML = rows.length ? `
                 <table class="min-w-full divide-y divide-slate-800 text-left text-xs">
                     <thead class="bg-slate-950 text-slate-300"><tr>
                         <th class="px-3 py-3">Proyecto / grupo</th><th class="px-3 py-3">Estudiantes</th>
-                        ${Array.from({ length: 5 }, (_, i) => `<th class="px-3 py-3 text-center">Jurado ${i + 1}</th>`).join('')}
+                        ${judges.map(judge => `<th class="px-3 py-3 text-center">${esc(judge.name)}${judge.active ? '' : ' (inactivo)'}</th>`).join('')}
                         <th class="px-3 py-3 text-center">Final</th><th class="px-3 py-3 text-center">Puesto</th><th class="px-3 py-3">Estado</th>
                     </tr></thead>
                     <tbody class="divide-y divide-slate-800 bg-slate-900">${rows.map(row => `
                         <tr>
                             <td class="px-3 py-3 font-semibold text-white">${esc(row.name)}${!db.projects.some(project => project.id === row.id) ? '<span class="ml-1 text-[10px] text-amber-400">(archivado)</span>' : ''}</td>
                             <td class="px-3 py-3 text-slate-400">${esc(row.author || '—')}</td>
-                            ${row.judges.map(item => `<td class="px-3 py-3 text-center text-slate-300">${item ? item.average.toFixed(2) : '—'}</td>`).join('')}
+                            ${row.judges.map(judge => `<td class="px-3 py-3 text-center ${judge.active ? 'text-slate-300' : 'text-slate-500'}">${judge.evaluation ? judge.evaluation.average.toFixed(2) : '—'}</td>`).join('')}
                             <td class="px-3 py-3 text-center font-bold text-senaGreen">${row.complete ? row.finalAverage.toFixed(2) : '—'}</td>
                             <td class="px-3 py-3 text-center font-bold text-white">${row.place || '—'}</td>
-                            <td class="px-3 py-3 text-slate-400">${row.judges.filter(Boolean).length}/5 jurados</td>
+                            <td class="px-3 py-3 text-slate-400">${row.completedActiveJudges}/${row.activeJudgeCount} activos</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>` : '<p class="p-5 text-sm text-slate-400">Aún no hay proyectos para mostrar.</p>';
@@ -896,40 +946,117 @@
 
         async function loadJudgePins() {
             try {
-                const judges = await api('/api/judge-pins');
+                judges = await api('/api/admin/judges');
+                const activeCount = judges.filter(judge => judge.active).length;
+                $('active-judges-summary').textContent = `Hay ${activeCount} jurados activos. El promedio final se calcula con ellos cuando todos hayan calificado el proyecto.`;
                 $('judge-pins-list').innerHTML = judges.map(judge => `
-                    <form onsubmit="saveJudgePin(event, ${judge.judgeNumber})" class="space-y-3 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <section class="space-y-3 rounded-2xl border border-slate-800 bg-slate-950 p-4">
                         <div class="flex items-center justify-between gap-3">
-                            <h5 class="font-bold text-white">Jurado ${judge.judgeNumber}</h5>
-                            <span class="rounded-full px-3 py-1 text-[10px] font-bold ${judge.configured ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}">${judge.configured ? 'PIN configurado' : 'Falta configurar'}</span>
+                            <h5 class="font-bold text-white">${esc(judge.name)}</h5>
+                            <span class="rounded-full px-3 py-1 text-[10px] font-bold ${judge.active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-700 text-slate-300'}">${judge.active ? 'Activo' : 'Inactivo'}</span>
                         </div>
-                        <label for="judge-pin-${judge.judgeNumber}" class="block text-xs font-semibold text-slate-300">Nuevo PIN (mínimo 8 caracteres)</label>
-                        <input id="judge-pin-${judge.judgeNumber}" type="password" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="Escribe el nuevo PIN" class="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
-                        <button id="judge-pin-save-${judge.judgeNumber}" type="submit" class="w-full rounded-xl bg-senaGreen px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"><i class="fa-solid fa-key mr-2"></i>Guardar PIN del Jurado ${judge.judgeNumber}</button>
-                    </form>`).join('');
+                        <form onsubmit="saveJudgeSettings(event, ${judge.judgeNumber})" class="space-y-3">
+                            <label for="judge-name-${judge.judgeNumber}" class="block text-xs font-semibold text-slate-300">Nombre
+                                <input id="judge-name-${judge.judgeNumber}" required maxlength="60" value="${esc(judge.name)}" class="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
+                            </label>
+                            <label for="judge-pin-${judge.judgeNumber}" class="block text-xs font-semibold text-slate-300">Nuevo PIN (opcional, mínimo 8 caracteres)
+                                <input id="judge-pin-${judge.judgeNumber}" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="${judge.configured ? 'Dejar vacío para conservarlo' : 'Debe configurar un PIN'}" class="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-senaGreen focus:outline-none">
+                            </label>
+                            <button id="judge-save-${judge.judgeNumber}" type="submit" class="w-full rounded-xl bg-senaGreen px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios</button>
+                        </form>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setJudgeActive(${judge.judgeNumber}, ${!judge.active})" class="flex-1 rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-white hover:bg-slate-700">${judge.active ? 'Desactivar' : 'Reactivar'}</button>
+                            ${judge.hasEvaluations ? '<span class="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-center text-[10px] text-slate-400">Tiene calificaciones; se conserva en el historial</span>' : `<button type="button" onclick="removeJudge(${judge.judgeNumber})" class="rounded-xl bg-red-950 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-900">Eliminar</button>`}
+                        </div>
+                        ${judge.hasEvaluations && !judge.active ? '<p class="text-[11px] text-slate-500">Sus notas permanecen en el historial, pero no se incluyen en el promedio final.</p>' : ''}
+                    </section>`).join('');
             } catch (error) {
-                showToast('No se pudieron cargar los PIN', error.message, true);
+                showToast('No se pudieron cargar los jurados', error.message, true);
             }
         }
 
-        async function saveJudgePin(event, judgeNumber) {
+        function showAddJudgeForm() {
+            $('add-judge-form').classList.remove('hidden');
+            $('new-judge-name').focus();
+        }
+
+        function hideAddJudgeForm() {
+            $('add-judge-form').classList.add('hidden');
+            $('new-judge-name').value = '';
+            $('new-judge-pin').value = '';
+        }
+
+        async function addJudge(event) {
             event.preventDefault();
-            const input = $(`judge-pin-${judgeNumber}`);
-            const button = $(`judge-pin-save-${judgeNumber}`);
-            const pin = input.value;
-            if (pin.length < 8 || pin.length > 128 || pin.trim() !== pin) {
-                showToast('PIN no válido', 'Debe tener entre 8 y 128 caracteres y no iniciar ni terminar con espacios.', true);
+            const name = $('new-judge-name').value.trim();
+            const pin = $('new-judge-pin').value;
+            if (!name || pin.length < 8 || pin.length > 128 || pin.trim() !== pin) {
+                showToast('Datos no válidos', 'Escribe el nombre y un PIN de 8 a 128 caracteres sin espacios al inicio o al final.', true);
+                return;
+            }
+            $('add-judge-submit').disabled = true;
+            try {
+                await api('/api/admin/judges', 'POST', { name, pin });
+                hideAddJudgeForm();
+                await loadJudgePins();
+                await loadActiveJudges();
+                showToast('Jurado agregado', `${name} ya puede ingresar con su nuevo PIN.`);
+            } catch (error) {
+                showToast('No se pudo agregar el jurado', error.message, true);
+            } finally {
+                $('add-judge-submit').disabled = false;
+            }
+        }
+
+        async function saveJudgeSettings(event, judgeNumber) {
+            event.preventDefault();
+            const name = $(`judge-name-${judgeNumber}`).value.trim();
+            const pin = $(`judge-pin-${judgeNumber}`).value;
+            const button = $(`judge-save-${judgeNumber}`);
+            if (!name || (pin && (pin.length < 8 || pin.length > 128 || pin.trim() !== pin))) {
+                showToast('Datos no válidos', 'Escribe el nombre y, si vas a cambiar el PIN, usa entre 8 y 128 caracteres sin espacios al inicio o al final.', true);
                 return;
             }
             button.disabled = true;
             try {
-                await api('/api/judge-pins', 'PUT', { judgeNumber, pin });
+                const judge = judges.find(item => item.judgeNumber === judgeNumber);
+                await api(`/api/admin/judges/${judgeNumber}`, 'PUT', { name, pin, active: judge.active });
                 await loadJudgePins();
-                showToast('PIN actualizado', `El nuevo PIN del Jurado ${judgeNumber} quedó guardado. Su sesión anterior se cerró.`);
+                await loadActiveJudges();
+                showToast('Cambios guardados', `${name} quedó actualizado${pin ? ' y su PIN fue cambiado' : ''}.`);
             } catch (error) {
-                showToast('No se pudo cambiar el PIN', error.message, true);
+                showToast('No se pudieron guardar los cambios', error.message, true);
             } finally {
                 button.disabled = false;
+            }
+        }
+
+        async function setJudgeActive(judgeNumber, active) {
+            const judge = judges.find(item => item.judgeNumber === judgeNumber);
+            if (!judge) return;
+            if (!active && !confirm(`¿Desactivar a ${judge.name}? Sus calificaciones anteriores se conservarán, pero dejarán de contar en los promedios y rankings futuros.`)) return;
+            try {
+                await api(`/api/admin/judges/${judgeNumber}`, 'PUT', { name: judge.name, pin: '', active });
+                await loadJudgePins();
+                await loadActiveJudges();
+                if ($('admin-evaluations-section').classList.contains('hidden') === false) await loadEvaluations();
+                showToast(active ? 'Jurado reactivado' : 'Jurado desactivado', active ? `${judge.name} vuelve a participar en el promedio.` : `Se conservaron sus notas, pero no contarán en el promedio.`);
+            } catch (error) {
+                showToast('No se pudo actualizar el jurado', error.message, true);
+            }
+        }
+
+        async function removeJudge(judgeNumber) {
+            const judge = judges.find(item => item.judgeNumber === judgeNumber);
+            if (!judge || judge.hasEvaluations) return;
+            if (!confirm(`¿Eliminar a ${judge.name}? No tiene calificaciones registradas.`)) return;
+            try {
+                await api(`/api/admin/judges/${judgeNumber}`, 'DELETE');
+                await loadJudgePins();
+                await loadActiveJudges();
+                showToast('Jurado eliminado', `${judge.name} fue eliminado.`);
+            } catch (error) {
+                showToast('No se pudo eliminar el jurado', error.message, true);
             }
         }
 
@@ -939,18 +1066,19 @@
 
         function exportEvaluationsCsv() {
             const headers = ['Proyecto / grupo', 'Estudiantes'];
-            for (let judge = 1; judge <= 5; judge++) {
-                RUBRIC_ITEMS.forEach((item, index) => headers.push(`Jurado ${judge} - ${index + 1}. ${item}`));
-                headers.push(`Jurado ${judge} - Total`, `Jurado ${judge} - Promedio`);
+            for (const judge of judges) {
+                const judgeLabel = `${judge.name}${judge.active ? '' : ' (inactivo)'}`;
+                RUBRIC_ITEMS.forEach((item, index) => headers.push(`${judgeLabel} - ${index + 1}. ${item}`));
+                headers.push(`${judgeLabel} - Total`, `${judgeLabel} - Promedio`);
             }
-            headers.push('Promedio final de los 5 jurados', 'Puesto', 'Estado');
+            headers.push(`Promedio final (${judges.filter(judge => judge.active).length} jurados activos)`, 'Puesto', 'Estado');
             const rows = evaluationExportRows().map(row => {
                 const cells = [row.name, row.author || ''];
-                row.judges.forEach(item => {
-                    RUBRIC_ITEMS.forEach((_, index) => cells.push(item ? item.scores[index] : ''));
-                    cells.push(item ? item.total : '', item ? item.average : '');
+                row.judges.forEach(judge => {
+                    RUBRIC_ITEMS.forEach((_, index) => cells.push(judge.evaluation ? judge.evaluation.scores[index] : ''));
+                    cells.push(judge.evaluation ? judge.evaluation.total : '', judge.evaluation ? judge.evaluation.average : '');
                 });
-                cells.push(row.complete ? row.finalAverage : '', row.place || '', `${row.judges.filter(Boolean).length}/5`);
+                cells.push(row.complete ? row.finalAverage : '', row.place || '', `${row.completedActiveJudges}/${row.activeJudgeCount} activos`);
                 return cells;
             });
             const excelSafe = value => {
@@ -974,11 +1102,12 @@
             const rows = evaluationExportRows();
             const printWindow = window.open('', '_blank');
             if (!printWindow) return showToast('Ventana bloqueada', 'Permite las ventanas emergentes para exportar o imprimir el PDF.', true);
-            const tableRows = rows.map(row => `<tr><td>${esc(row.name)}</td><td>${esc(row.author || '—')}</td>${row.judges.map(item => `<td>${item ? item.average.toFixed(2) : '—'}</td>`).join('')}<td>${row.complete ? row.finalAverage.toFixed(2) : 'Pendiente'}</td><td>${row.place || '—'}</td><td>${row.judges.filter(Boolean).length}/5</td></tr>`).join('');
+            const tableRows = rows.map(row => `<tr><td>${esc(row.name)}</td><td>${esc(row.author || '—')}</td>${row.judges.map(judge => `<td>${judge.evaluation ? judge.evaluation.average.toFixed(2) : '—'}</td>`).join('')}<td>${row.complete ? row.finalAverage.toFixed(2) : 'Pendiente'}</td><td>${row.place || '—'}</td><td>${row.completedActiveJudges}/${row.activeJudgeCount}</td></tr>`).join('');
             const podium = rows.filter(row => row.complete).slice(0, 5).map(row => `<li>${row.place}. ${esc(row.name)} — ${row.finalAverage.toFixed(2)} / 5</li>`).join('');
+            const activeCount = judges.filter(judge => judge.active).length;
             printWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Resultados de calificación</title><style>
                 @page{size:landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#172033;font-size:10px}h1{font-size:20px}h2{font-size:14px;margin-top:22px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #9ca3af;padding:6px;text-align:left}th{background:#e5e7eb}td:nth-child(n+3){text-align:center}li{margin:5px 0}.note{color:#475569}
-                </style></head><body><h1>Resultados de calificación de proyectos</h1><p class="note">Puntaje de cada jurado: promedio de sus 10 criterios. Final: promedio de las calificaciones de los cinco jurados; solo proyectos completos participan en el ranking.</p><h2>Primeros cinco lugares</h2><ol>${podium || '<li>Sin resultados completos todavía.</li>'}</ol><h2>Detalle por proyecto</h2><table><thead><tr><th>Proyecto / grupo</th><th>Estudiantes</th>${Array.from({ length: 5 }, (_, i) => `<th>Jurado ${i + 1}</th>`).join('')}<th>Final</th><th>Puesto</th><th>Estado</th></tr></thead><tbody>${tableRows || '<tr><td colspan="10">No hay proyectos.</td></tr>'}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);
+                </style></head><body><h1>Resultados de calificación de proyectos</h1><p class="note">Promedio final calculado con ${activeCount} jurados activos. Solo proyectos calificados por todos los jurados activos participan en el ranking.</p><h2>Primeros cinco lugares</h2><ol>${podium || '<li>Sin resultados completos todavía.</li>'}</ol><h2>Detalle por proyecto</h2><table><thead><tr><th>Proyecto / grupo</th><th>Estudiantes</th>${judges.map(judge => `<th>${esc(judge.name)}${judge.active ? '' : ' (inactivo)'}</th>`).join('')}<th>Final</th><th>Puesto</th><th>Estado</th></tr></thead><tbody>${tableRows || '<tr><td colspan="10">No hay proyectos.</td></tr>'}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);
             printWindow.document.close();
         }
 
@@ -1126,6 +1255,8 @@
             selectedEvaluationProjectId = projectId;
             if (!db.projects.some(project => project.id === projectId)) return showToast('Proyecto no disponible', 'Actualiza la página e inténtalo de nuevo.', true);
             if (!judgeToken) {
+                await loadActiveJudges();
+                if (!activeJudges.length) return showToast('No hay jurados activos', 'Contacta al administrador para habilitar un jurado.', true);
                 $('judge-login-err').classList.add('hidden');
                 $('judge-pin').value = '';
                 openModal('judge-login-modal');
@@ -1170,7 +1301,7 @@
                 return showToast('Proyecto ya calificado', 'Este jurado ya registró su calificación y no puede volver a calificar este proyecto.', true);
             }
             $('evaluation-project-title').textContent = project.name;
-            $('evaluation-judge-label').textContent = `Jurado ${judgeNumber}`;
+            $('evaluation-judge-label').textContent = judgeDisplayName(judgeNumber);
             $('evaluation-items').innerHTML = RUBRIC_ITEMS.map((item, index) => `
                 <div class="grid grid-cols-1 items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:grid-cols-[1fr_130px]">
                     <label for="evaluation-score-${index}" class="text-sm font-semibold text-slate-200">${index + 1}. ${esc(item)}</label>

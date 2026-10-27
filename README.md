@@ -8,8 +8,8 @@ Página web para las sustentaciones de proyectos de los estudiantes de la Técni
 - **Galería de Imágenes**: Sección para mostrar fotos de eventos y actividades
 - **Contenido Editable**: Todo el contenido del sitio es editable desde el panel de admin
 - **Sistema de Votación**: Los usuarios pueden calificar el logo de la técnica
-- **Calificación de proyectos**: Cinco jurados ingresan con PIN individual y califican 10 criterios de 1 a 5, con decimales
-- **Resultados y ranking**: El administrador consulta los promedios por jurado, el promedio final por proyecto y los cinco primeros lugares
+- **Calificación de proyectos**: Los jurados activos ingresan con PIN individual y califican 10 criterios de 1 a 5, con decimales
+- **Resultados y ranking**: El administrador consulta los promedios por jurado, el promedio final por proyecto y los cinco primeros lugares. El promedio usa todos los jurados activos, y un proyecto entra al ranking cuando todos ellos calificaron
 - **Exportación**: Descarga los resultados en CSV compatible con Excel o imprime/guarda el reporte como PDF
 - **Contador Regresivo**: Cuenta regresiva hasta el evento de sustentaciones
 - **Responsive**: Diseño adaptable a todos los dispositivos
@@ -72,8 +72,9 @@ Para acceder al panel de administración:
 - **Proyectos**: Agregar hasta 12 proyectos con logo, descripción, autor y URL
 - **Galería**: Subir imágenes de eventos (máximo 4MB por imagen)
 - **Contenido**: Editar todos los textos, títulos y descripciones del sitio
-- **Calificaciones**: Consultar las notas de cada jurado, el total y promedio de sus 10 criterios, el promedio final del proyecto y su puesto. El ranking se calcula cuando los cinco jurados califican.
-- **PIN de jurados**: Crear o cambiar individualmente cada PIN desde la pestaña correspondiente. El panel nunca muestra los PIN existentes; se almacenan como hashes protegidos en `DATA_DIR/db.json`. Cambiar un PIN cierra la sesión activa de ese jurado y prevalece sobre su variable de entorno inicial.
+- **Calificaciones**: Consultar las notas de cada jurado, el total y promedio de sus 10 criterios, el promedio final del proyecto y su puesto. El ranking se calcula cuando todos los jurados activos califican.
+- **Administrar jurados**: Agregar jurados con nombre y PIN, editar nombres y cambiar claves, o desactivarlos si no participan. Las calificaciones históricas se conservan; las de un jurado inactivo dejan de contar en los promedios y rankings futuros. Un jurado con calificaciones no se puede eliminar permanentemente.
+- **PIN de jurados**: El panel nunca muestra los PIN existentes; se almacenan como hashes protegidos en `DATA_DIR/db.json`. Cambiar un PIN cierra la sesión activa de ese jurado y prevalece sobre su variable de entorno inicial.
 - **Exportar resultados**: En la pestaña Calificaciones, descarga un CSV compatible con Excel (incluye las 10 notas de cada jurado) o usa Exportar PDF y elige “Guardar como PDF” en el diálogo de impresión.
 - **Features**: Agregar hasta 9 características en "¿De qué se trata?"
 - **Tecnologías**: Listar hasta 15 tecnologías que se enseñan

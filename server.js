@@ -130,6 +130,12 @@ const defaultDb = {
   spotlightVotes: [],
   evaluations: [],
   judgePinHashes: {},
+  nextJudgeNumber: 6,
+  judges: Array.from({ length: 5 }, (_, index) => ({
+    judgeNumber: index + 1,
+    name: `Jurado ${index + 1}`,
+    active: true
+  })),
   gallery: [
     { id: 'g1', title: 'Práctica en Laboratorio de Cómputo', image: 'img/4.jpeg', category: 'Práctica Técnica' },
     { id: 'g2', title: 'Estudiantes Técnica Programación', image: 'img/grupo.jpg', category: 'Grupos' },
@@ -157,6 +163,26 @@ if (!Array.isArray(db.evaluations)) {
 }
 if (!db.judgePinHashes || typeof db.judgePinHashes !== 'object' || Array.isArray(db.judgePinHashes)) {
   db.judgePinHashes = {};
+  save();
+}
+if (!Array.isArray(db.judges)) {
+  db.judges = Array.from({ length: 5 }, (_, index) => ({
+    judgeNumber: index + 1,
+    name: `Jurado ${index + 1}`,
+    active: true
+  }));
+  save();
+}
+db.judges = db.judges
+  .filter(judge => Number.isInteger(judge.judgeNumber) && judge.judgeNumber > 0)
+  .map(judge => ({
+    judgeNumber: judge.judgeNumber,
+    name: String(judge.name || '').trim().slice(0, 60) || `Jurado ${judge.judgeNumber}`,
+    active: judge.active !== false
+  }));
+const nextAvailableJudgeNumber = db.judges.reduce((max, judge) => Math.max(max, judge.judgeNumber), 0) + 1;
+if (!Number.isInteger(db.nextJudgeNumber) || db.nextJudgeNumber < nextAvailableJudgeNumber) {
+  db.nextJudgeNumber = nextAvailableJudgeNumber;
   save();
 }
 
@@ -215,6 +241,11 @@ function judgeSession(req) {
     judgeSessions.delete(token);
     return null;
   }
+  const judge = db.judges.find(item => item.judgeNumber === session.judgeNumber);
+  if (!judge || !judge.active) {
+    judgeSessions.delete(token);
+    return null;
+  }
   return session;
 }
 
@@ -239,6 +270,18 @@ function judgePinIsConfigured(judgeNumber) {
   return Boolean(
     stored && /^[\da-f]{64}$/i.test(stored.salt || '') && /^[\da-f]{128}$/i.test(stored.hash || '')
   ) || Boolean(process.env[`JUDGE_${judgeNumber}_PIN`]);
+}
+
+function judgePinUpdate(judgeNumber, pin) {
+  const salt = crypto.randomBytes(32);
+  const hash = crypto.scryptSync(pin, salt, 64);
+  db.judgePinHashes[String(judgeNumber)] = { salt: salt.toString('hex'), hash: hash.toString('hex') };
+}
+
+function invalidateJudgeSessions(judgeNumber) {
+  for (const [sessionToken, session] of judgeSessions) {
+    if (session.judgeNumber === judgeNumber) judgeSessions.delete(sessionToken);
+  }
 }
 
 function cleanUrl(u) {
@@ -456,6 +499,13 @@ async function handleApi(req, res, url) {
     return send(res, 201, spotlightVoteSummary(voterKey));
   }
 
+  if (url.pathname === '/api/judges' && method === 'GET') {
+    const activeJudges = db.judges
+      .filter(judge => judge.active)
+      .map(({ judgeNumber, name }) => ({ judgeNumber, name }));
+    return send(res, 200, activeJudges, { 'Cache-Control': 'no-store' });
+  }
+
   if (url.pathname === '/api/login' && method === 'POST') {
     const ip = req.socket.remoteAddress;
     const a = attempts.get(ip) || { n: 0, t: Date.now() };
@@ -480,7 +530,8 @@ async function handleApi(req, res, url) {
     let body;
     try { body = JSON.parse(await readBody(req, 2000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
     const judgeNumber = Number(body.judgeNumber);
-    if (!Number.isInteger(judgeNumber) || judgeNumber < 1 || judgeNumber > 5) {
+    const judge = db.judges.find(item => item.judgeNumber === judgeNumber && item.active);
+    if (!Number.isInteger(judgeNumber) || !judge) {
       return send(res, 400, { error: 'Selecciona un jurado válido.' });
     }
     if (!judgePinIsConfigured(judgeNumber)) return send(res, 503, { error: `El PIN del Jurado ${judgeNumber} aún no está configurado.` });
@@ -538,33 +589,84 @@ async function handleApi(req, res, url) {
 
   if (!isAuth(req)) return send(res, 401, { error: 'No autorizado' });
 
-  if (url.pathname === '/api/judge-pins' && method === 'GET') {
-    const judges = Array.from({ length: 5 }, (_, index) => {
-      const judgeNumber = index + 1;
-      return { judgeNumber, configured: judgePinIsConfigured(judgeNumber) };
-    });
+  if (url.pathname === '/api/admin/judges' && method === 'GET') {
+    const judges = db.judges.map(judge => ({
+      ...judge,
+      configured: judgePinIsConfigured(judge.judgeNumber),
+      hasEvaluations: db.evaluations.some(item => item.judgeNumber === judge.judgeNumber)
+    }));
     return send(res, 200, judges, { 'Cache-Control': 'no-store' });
   }
 
-  if (url.pathname === '/api/judge-pins' && method === 'PUT') {
+  if (url.pathname === '/api/admin/judges' && method === 'POST') {
     let body;
-    try { body = JSON.parse(await readBody(req, 2000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
-    const judgeNumber = Number(body.judgeNumber);
+    try { body = JSON.parse(await readBody(req, 3000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const name = str(body.name, 60);
     const pin = typeof body.pin === 'string' ? body.pin : '';
-    if (!Number.isInteger(judgeNumber) || judgeNumber < 1 || judgeNumber > 5) {
-      return send(res, 400, { error: 'Selecciona un jurado válido.' });
+    if (!name) return send(res, 400, { error: 'El nombre del jurado es obligatorio.' });
+    if (db.judges.some(judge => judge.name.toLowerCase() === name.toLowerCase())) {
+      return send(res, 409, { error: 'Ya existe un jurado con ese nombre.' });
     }
     if (pin.length < 8 || pin.length > 128 || pin.trim() !== pin) {
       return send(res, 400, { error: 'El PIN debe tener entre 8 y 128 caracteres y no iniciar ni terminar con espacios.' });
     }
-    const salt = crypto.randomBytes(32);
-    const hash = crypto.scryptSync(pin, salt, 64);
-    db.judgePinHashes[String(judgeNumber)] = { salt: salt.toString('hex'), hash: hash.toString('hex') };
+    const judgeNumber = db.nextJudgeNumber;
+    const judge = { judgeNumber, name, active: true };
+    db.judges.push(judge);
+    db.nextJudgeNumber++;
+    judgePinUpdate(judgeNumber, pin);
     save();
-    for (const [sessionToken, session] of judgeSessions) {
-      if (session.judgeNumber === judgeNumber) judgeSessions.delete(sessionToken);
+    return send(res, 201, { ...judge, configured: true, hasEvaluations: false });
+  }
+
+  const judgeAdminMatch = /^\/api\/admin\/judges\/(\d+)$/.exec(url.pathname);
+  if (judgeAdminMatch && (method === 'PUT' || method === 'DELETE')) {
+    const judgeNumber = Number(judgeAdminMatch[1]);
+    const judge = db.judges.find(item => item.judgeNumber === judgeNumber);
+    if (!judge) return send(res, 404, { error: 'Jurado no encontrado.' });
+    const hasEvaluations = db.evaluations.some(item => item.judgeNumber === judgeNumber);
+    const activeJudges = db.judges.filter(item => item.active);
+
+    if (method === 'DELETE') {
+      if (judge.active && activeJudges.length === 1) {
+        return send(res, 400, { error: 'Debe quedar al menos un jurado activo.' });
+      }
+      if (hasEvaluations) {
+        judge.active = false;
+      } else {
+        db.judges = db.judges.filter(item => item.judgeNumber !== judgeNumber);
+        delete db.judgePinHashes[String(judgeNumber)];
+      }
+      invalidateJudgeSessions(judgeNumber);
+      save();
+      return send(res, 200, { judgeNumber, active: false, removed: !hasEvaluations });
     }
-    return send(res, 200, { judgeNumber, configured: true });
+
+    let body;
+    try { body = JSON.parse(await readBody(req, 3000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    const name = str(body.name, 60);
+    if (!name) return send(res, 400, { error: 'El nombre del jurado es obligatorio.' });
+    if (db.judges.some(item => item.judgeNumber !== judgeNumber && item.name.toLowerCase() === name.toLowerCase())) {
+      return send(res, 409, { error: 'Ya existe otro jurado con ese nombre.' });
+    }
+    const active = body.active === true;
+    if (judge.active && !active && activeJudges.length === 1) {
+      return send(res, 400, { error: 'Debe quedar al menos un jurado activo.' });
+    }
+    const pin = typeof body.pin === 'string' ? body.pin : '';
+    if (pin && (pin.length < 8 || pin.length > 128 || pin.trim() !== pin)) {
+      return send(res, 400, { error: 'El PIN debe tener entre 8 y 128 caracteres y no iniciar ni terminar con espacios.' });
+    }
+    judge.name = name;
+    judge.active = active;
+    if (pin) judgePinUpdate(judgeNumber, pin);
+    if (!active || pin) invalidateJudgeSessions(judgeNumber);
+    save();
+    return send(res, 200, {
+      ...judge,
+      configured: judgePinIsConfigured(judgeNumber),
+      hasEvaluations
+    });
   }
 
   if (url.pathname === '/api/evaluations' && method === 'GET') {
