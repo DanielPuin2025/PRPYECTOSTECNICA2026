@@ -312,6 +312,11 @@
             <div class="overflow-y-auto p-5 sm:p-7">
                 <p class="mb-4 text-sm text-slate-300">Califique cada criterio de 1 a 5. Se aceptan decimales; después de guardar no se podrán modificar ni borrar las notas.</p>
                 <div id="evaluation-items" class="space-y-3"></div>
+                <div class="mt-4">
+                    <label for="evaluation-comments" class="mb-1 block text-sm font-semibold text-slate-200">Observaciones</label>
+                    <textarea id="evaluation-comments" rows="4" maxlength="1500" placeholder="Escriba aquí sus observaciones sobre el proyecto (opcional)" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-senaGreen focus:outline-none"></textarea>
+                    <p class="mt-1 text-[11px] text-slate-500">Se guarda un borrador automático en este dispositivo hasta que presione «Guardar calificación».</p>
+                </div>
             </div>
             <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700 bg-slate-800/60 px-5 py-4">
                 <button type="button" onclick="logoutJudge()" class="text-xs font-semibold text-slate-400 hover:text-white">Cambiar de jurado / cerrar sesión</button>
@@ -358,6 +363,7 @@
                             <p id="evaluation-status-description" class="text-xs text-slate-400 mt-1">El promedio final y el ranking incluyen a los jurados activos.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
+                            <button onclick="resetEvaluations()" class="rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600"><i class="fa-solid fa-trash-arrow-up mr-2"></i>Reiniciar todas</button>
                             <button onclick="exportEvaluationsCsv()" class="rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-600"><i class="fa-solid fa-file-excel mr-2"></i>Excel (CSV)</button>
                             <button onclick="printEvaluations()" class="rounded-xl bg-red-700 px-4 py-2 text-xs font-bold text-white hover:bg-red-600"><i class="fa-solid fa-file-pdf mr-2"></i>Exportar PDF</button>
                             <button onclick="loadEvaluations()" class="rounded-xl bg-slate-700 px-4 py-2 text-xs font-bold text-white hover:bg-slate-600"><i class="fa-solid fa-rotate mr-2"></i>Actualizar</button>
@@ -508,14 +514,15 @@
         ];
         let db = { projects: [], gallery: [] };
         let token = sessionStorage.getItem('adm') || '';
-        let judgeToken = sessionStorage.getItem('judge-token') || '';
-        let judgeNumber = Number(sessionStorage.getItem('judge-number')) || 0;
+        let judgeToken = localStorage.getItem('judge-token') || sessionStorage.getItem('judge-token') || '';
+        let judgeNumber = Number(localStorage.getItem('judge-number') || sessionStorage.getItem('judge-number')) || 0;
         let judges = [];
         let activeJudges = [];
         let selectedEvaluationProjectId = '';
         let judgeEvaluations = [];
         let evaluations = [];
         let evaluationPending = false;
+        let currentDraftKey = '';
         const SPOTLIGHT_VOTE_KEY = 'spotlight-voter-v1';
         let spotlightVotes = { count: 0, average: 0, distribution: [0, 0, 0, 0, 0], userRating: null };
         let spotlightVotePending = false;
@@ -905,6 +912,33 @@
             });
         }
 
+        function observationsList(row) {
+            return row.judges.filter(judge => judge.evaluation && judge.evaluation.comments)
+                .map(judge => ({ name: judge.name, text: judge.evaluation.comments }));
+        }
+
+        function observationsHtml(row) {
+            const items = observationsList(row);
+            return items.length
+                ? items.map(item => `<p class="mb-1"><span class="font-bold text-white">${esc(item.name)}:</span> <span class="whitespace-pre-line">${esc(item.text)}</span></p>`).join('')
+                : '<span class="text-slate-500">—</span>';
+        }
+
+        async function resetEvaluations(projectId, judgeNum) {
+            const scope = judgeNum !== undefined ? 'la calificación de este jurado para el proyecto' : projectId ? 'todas las calificaciones de este proyecto' : 'TODAS las calificaciones de todos los proyectos';
+            if (!confirm(`¿Reiniciar ${scope}? Los jurados podrán volver a calificar. Las notas retiradas quedan archivadas en el servidor.`)) return;
+            const query = new URLSearchParams();
+            if (projectId) query.set('projectId', projectId);
+            if (judgeNum !== undefined) query.set('judgeNumber', String(judgeNum));
+            try {
+                const result = await api(`/api/admin/evaluations${query.toString() ? '?' + query : ''}`, 'DELETE');
+                showToast('Calificaciones reiniciadas', `${result.removed} registro(s) retirado(s).`);
+                await loadEvaluations();
+            } catch (error) {
+                showToast('No se pudo reiniciar', error.message, true);
+            }
+        }
+
         function loadEvaluations() {
             return Promise.all([api('/api/evaluations'), api('/api/admin/judges')]).then(([resultData, judgeData]) => {
                 evaluations = resultData;
@@ -929,16 +963,18 @@
                     <thead class="bg-slate-950 text-slate-300"><tr>
                         <th class="px-3 py-3">Proyecto / grupo</th><th class="px-3 py-3">Estudiantes</th>
                         ${judges.map(judge => `<th class="px-3 py-3 text-center">${esc(judge.name)}${judge.active ? '' : ' (inactivo)'}</th>`).join('')}
-                        <th class="px-3 py-3 text-center">Final</th><th class="px-3 py-3 text-center">Puesto</th><th class="px-3 py-3">Estado</th>
+                        <th class="px-3 py-3 text-center">Final</th><th class="px-3 py-3 text-center">Puesto</th><th class="px-3 py-3">Estado</th><th class="px-3 py-3">Observaciones</th><th class="px-3 py-3">Acción</th>
                     </tr></thead>
                     <tbody class="divide-y divide-slate-800 bg-slate-900">${rows.map(row => `
                         <tr>
                             <td class="px-3 py-3 font-semibold text-white">${esc(row.name)}${!db.projects.some(project => project.id === row.id) ? '<span class="ml-1 text-[10px] text-amber-400">(archivado)</span>' : ''}</td>
                             <td class="px-3 py-3 text-slate-400">${esc(row.author || '—')}</td>
-                            ${row.judges.map(judge => `<td class="px-3 py-3 text-center ${judge.active ? 'text-slate-300' : 'text-slate-500'}">${judge.evaluation ? judge.evaluation.average.toFixed(2) : '—'}</td>`).join('')}
+                            ${row.judges.map(judge => `<td class="px-3 py-3 text-center ${judge.active ? 'text-slate-300' : 'text-slate-500'}">${judge.evaluation ? `${judge.evaluation.average.toFixed(2)} <button type="button" onclick="resetEvaluations('${esc(row.id)}', ${judge.judgeNumber})" title="Reiniciar esta calificación" class="ml-1 text-amber-500 hover:text-amber-300"><i class="fa-solid fa-rotate-left"></i></button>` : '—'}</td>`).join('')}
                             <td class="px-3 py-3 text-center font-bold text-senaGreen">${row.complete ? row.finalAverage.toFixed(2) : '—'}</td>
                             <td class="px-3 py-3 text-center font-bold text-white">${row.place || '—'}</td>
                             <td class="px-3 py-3 text-slate-400">${row.completedActiveJudges}/${row.activeJudgeCount} activos</td>
+                            <td class="px-3 py-3 text-slate-300 min-w-[220px]">${observationsHtml(row)}</td>
+                            <td class="px-3 py-3"><button type="button" onclick="resetEvaluations('${esc(row.id)}')" class="whitespace-nowrap rounded-lg bg-amber-700/80 px-2 py-1 text-[11px] font-bold text-white hover:bg-amber-600">Reiniciar proyecto</button></td>
                         </tr>`).join('')}
                     </tbody>
                 </table>` : '<p class="p-5 text-sm text-slate-400">Aún no hay proyectos para mostrar.</p>';
@@ -1069,14 +1105,14 @@
             for (const judge of judges) {
                 const judgeLabel = `${judge.name}${judge.active ? '' : ' (inactivo)'}`;
                 RUBRIC_ITEMS.forEach((item, index) => headers.push(`${judgeLabel} - ${index + 1}. ${item}`));
-                headers.push(`${judgeLabel} - Total`, `${judgeLabel} - Promedio`);
+                headers.push(`${judgeLabel} - Total`, `${judgeLabel} - Promedio`, `${judgeLabel} - Observaciones`);
             }
             headers.push(`Promedio final (${judges.filter(judge => judge.active).length} jurados activos)`, 'Puesto', 'Estado');
             const rows = evaluationExportRows().map(row => {
                 const cells = [row.name, row.author || ''];
                 row.judges.forEach(judge => {
                     RUBRIC_ITEMS.forEach((_, index) => cells.push(judge.evaluation ? judge.evaluation.scores[index] : ''));
-                    cells.push(judge.evaluation ? judge.evaluation.total : '', judge.evaluation ? judge.evaluation.average : '');
+                    cells.push(judge.evaluation ? judge.evaluation.total : '', judge.evaluation ? judge.evaluation.average : '', judge.evaluation ? judge.evaluation.comments || '' : '');
                 });
                 cells.push(row.complete ? row.finalAverage : '', row.place || '', `${row.completedActiveJudges}/${row.activeJudgeCount} activos`);
                 return cells;
@@ -1102,12 +1138,12 @@
             const rows = evaluationExportRows();
             const printWindow = window.open('', '_blank');
             if (!printWindow) return showToast('Ventana bloqueada', 'Permite las ventanas emergentes para exportar o imprimir el PDF.', true);
-            const tableRows = rows.map(row => `<tr><td>${esc(row.name)}</td><td>${esc(row.author || '—')}</td>${row.judges.map(judge => `<td>${judge.evaluation ? judge.evaluation.average.toFixed(2) : '—'}</td>`).join('')}<td>${row.complete ? row.finalAverage.toFixed(2) : 'Pendiente'}</td><td>${row.place || '—'}</td><td>${row.completedActiveJudges}/${row.activeJudgeCount}</td></tr>`).join('');
+            const tableRows = rows.map(row => `<tr><td>${esc(row.name)}</td><td>${esc(row.author || '—')}</td>${row.judges.map(judge => `<td>${judge.evaluation ? judge.evaluation.average.toFixed(2) : '—'}</td>`).join('')}<td>${row.complete ? row.finalAverage.toFixed(2) : 'Pendiente'}</td><td>${row.place || '—'}</td><td>${row.completedActiveJudges}/${row.activeJudgeCount}</td><td class="obs">${observationsList(row).map(item => `<b>${esc(item.name)}:</b> ${esc(item.text).replace(/\n/g, '<br>')}`).join('<br>') || '—'}</td></tr>`).join('');
             const podium = rows.filter(row => row.complete).slice(0, 5).map(row => `<li>${row.place}. ${esc(row.name)} — ${row.finalAverage.toFixed(2)} / 5</li>`).join('');
             const activeCount = judges.filter(judge => judge.active).length;
             printWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Resultados de calificación</title><style>
-                @page{size:landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#172033;font-size:10px}h1{font-size:20px}h2{font-size:14px;margin-top:22px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #9ca3af;padding:6px;text-align:left}th{background:#e5e7eb}td:nth-child(n+3){text-align:center}li{margin:5px 0}.note{color:#475569}
-                </style></head><body><h1>Resultados de calificación de proyectos</h1><p class="note">Promedio final calculado con ${activeCount} jurados activos. Solo proyectos calificados por todos los jurados activos participan en el ranking.</p><h2>Primeros cinco lugares</h2><ol>${podium || '<li>Sin resultados completos todavía.</li>'}</ol><h2>Detalle por proyecto</h2><table><thead><tr><th>Proyecto / grupo</th><th>Estudiantes</th>${judges.map(judge => `<th>${esc(judge.name)}${judge.active ? '' : ' (inactivo)'}</th>`).join('')}<th>Final</th><th>Puesto</th><th>Estado</th></tr></thead><tbody>${tableRows || '<tr><td colspan="10">No hay proyectos.</td></tr>'}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);
+                @page{size:landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#172033;font-size:10px}h1{font-size:20px}h2{font-size:14px;margin-top:22px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #9ca3af;padding:6px;text-align:left}th{background:#e5e7eb}td:nth-child(n+3){text-align:center}td.obs{text-align:left;min-width:180px}li{margin:5px 0}.note{color:#475569}
+                </style></head><body><h1>Resultados de calificación de proyectos</h1><p class="note">Promedio final calculado con ${activeCount} jurados activos. Solo proyectos calificados por todos los jurados activos participan en el ranking.</p><h2>Primeros cinco lugares</h2><ol>${podium || '<li>Sin resultados completos todavía.</li>'}</ol><h2>Detalle por proyecto</h2><table><thead><tr><th>Proyecto / grupo</th><th>Estudiantes</th>${judges.map(judge => `<th>${esc(judge.name)}${judge.active ? '' : ' (inactivo)'}</th>`).join('')}<th>Final</th><th>Puesto</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>${tableRows || '<tr><td colspan="10">No hay proyectos.</td></tr>'}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);
             printWindow.document.close();
         }
 
@@ -1280,8 +1316,8 @@
                 });
                 judgeToken = result.token;
                 judgeNumber = result.judgeNumber;
-                sessionStorage.setItem('judge-token', judgeToken);
-                sessionStorage.setItem('judge-number', String(judgeNumber));
+                localStorage.setItem('judge-token', judgeToken);
+                localStorage.setItem('judge-number', String(judgeNumber));
                 judgeEvaluations = await judgeApi('/api/judge-evaluations');
                 closeModal('judge-login-modal');
                 renderProjects();
@@ -1302,11 +1338,23 @@
             }
             $('evaluation-project-title').textContent = project.name;
             $('evaluation-judge-label').textContent = judgeDisplayName(judgeNumber);
+            const draftKey = `eval-draft:${judgeNumber}:${project.id}`;
+            let draft = {};
+            try { draft = JSON.parse(localStorage.getItem(draftKey) || '{}') || {}; } catch { draft = {}; }
+            const draftScores = Array.isArray(draft.scores) ? draft.scores : [];
             $('evaluation-items').innerHTML = RUBRIC_ITEMS.map((item, index) => `
                 <div class="grid grid-cols-1 items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:grid-cols-[1fr_130px]">
                     <label for="evaluation-score-${index}" class="text-sm font-semibold text-slate-200">${index + 1}. ${esc(item)}</label>
-                    <input id="evaluation-score-${index}" type="number" min="1" max="5" step="0.01" required inputmode="decimal" placeholder="1.00 a 5.00" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-senaGreen focus:outline-none">
+                    <input id="evaluation-score-${index}" type="number" min="1" max="5" step="0.01" required inputmode="decimal" placeholder="1.00 a 5.00" value="${esc(draftScores[index] == null ? '' : draftScores[index])}" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-senaGreen focus:outline-none">
                 </div>`).join('');
+            $('evaluation-comments').value = typeof draft.comments === 'string' ? draft.comments : '';
+            const saveDraft = () => {
+                const values = [...$('evaluation-items').querySelectorAll('input')].map(input => input.value);
+                localStorage.setItem(draftKey, JSON.stringify({ scores: values, comments: $('evaluation-comments').value }));
+            };
+            $('evaluation-items').oninput = saveDraft;
+            $('evaluation-comments').oninput = saveDraft;
+            currentDraftKey = draftKey;
             $('evaluation-submit').disabled = false;
             evaluationPending = false;
             openModal('evaluation-modal');
@@ -1322,13 +1370,21 @@
             evaluationPending = true;
             $('evaluation-submit').disabled = true;
             try {
-                const result = await judgeApi('/api/evaluations', 'POST', { projectId: selectedEvaluationProjectId, scores });
+                const result = await judgeApi('/api/evaluations', 'POST', { projectId: selectedEvaluationProjectId, scores, comments: $('evaluation-comments').value });
+                localStorage.removeItem(currentDraftKey);
                 judgeEvaluations.push({ projectId: result.projectId });
                 closeModal('evaluation-modal');
                 showToast('Calificación guardada', 'El registro quedó guardado. Este jurado no podrá volver a calificar el proyecto.');
                 renderProjects();
             } catch (error) {
-                showToast('No se pudo guardar', error.message, true);
+                if (!judgeToken) {
+                    closeModal('evaluation-modal');
+                    showToast('Sesión vencida', 'Tus notas quedaron guardadas como borrador. Ingresa con tu PIN para continuar.', true);
+                    $('judge-pin').value = '';
+                    openModal('judge-login-modal');
+                } else {
+                    showToast('No se pudo guardar', error.message, true);
+                }
             } finally {
                 evaluationPending = false;
                 $('evaluation-submit').disabled = false;
@@ -1339,6 +1395,8 @@
             judgeToken = '';
             judgeNumber = 0;
             judgeEvaluations = [];
+            localStorage.removeItem('judge-token');
+            localStorage.removeItem('judge-number');
             sessionStorage.removeItem('judge-token');
             sessionStorage.removeItem('judge-number');
             renderProjects();

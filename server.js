@@ -192,9 +192,31 @@ function save() {
   fs.renameSync(tmp, DB_FILE);
 }
 
-const sessions = new Map(); // token -> expiry
-const judgeSessions = new Map(); // token -> { judgeNumber, expiry }
+const ADMIN_SESSION_MS = 12 * 3600 * 1000;
+const JUDGE_SESSION_MS = 24 * 3600 * 1000;
+const tokenKey = token => crypto.createHash('sha256').update(String(token)).digest('hex');
+if (!db.authSessions || typeof db.authSessions !== 'object' || Array.isArray(db.authSessions)) db.authSessions = {};
+if (!Array.isArray(db.evaluationArchive)) db.evaluationArchive = [];
+
+// Las sesiones se guardan como hash para que sobrevivan a reinicios del servidor.
+const sessions = {
+  get(token) { const s = db.authSessions[tokenKey(token)]; return s && s.type === 'admin' ? s.expiry : undefined; },
+  set(token, expiry) { db.authSessions[tokenKey(token)] = { type: 'admin', expiry }; save(); },
+  delete(token) { if (delete db.authSessions[tokenKey(token)]) save(); }
+};
+const judgeSessions = {
+  get(token) { const s = db.authSessions[tokenKey(token)]; return s && s.type === 'judge' ? s : undefined; },
+  set(token, session) { db.authSessions[tokenKey(token)] = { type: 'judge', ...session }; save(); },
+  delete(token) { if (delete db.authSessions[tokenKey(token)]) save(); },
+  *[Symbol.iterator]() {
+    for (const [key, s] of Object.entries(db.authSessions)) if (s.type === 'judge') yield [key, s];
+  }
+};
 const attempts = new Map(); // ip -> {n, t}
+for (const [key, s] of Object.entries(db.authSessions)) {
+  if (!s || s.expiry < Date.now()) delete db.authSessions[key];
+}
+save();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
@@ -230,6 +252,7 @@ function isAuth(req) {
   const exp = sessions.get(t);
   if (!exp) return false;
   if (exp < Date.now()) { sessions.delete(t); return false; }
+  if (exp - Date.now() < ADMIN_SESSION_MS / 2) sessions.set(t, Date.now() + ADMIN_SESSION_MS);
   return true;
 }
 
@@ -245,6 +268,9 @@ function judgeSession(req) {
   if (!judge || !judge.active) {
     judgeSessions.delete(token);
     return null;
+  }
+  if (session.expiry - Date.now() < JUDGE_SESSION_MS / 2) {
+    judgeSessions.set(token, { judgeNumber: session.judgeNumber, expiry: Date.now() + JUDGE_SESSION_MS });
   }
   return session;
 }
@@ -279,9 +305,10 @@ function judgePinUpdate(judgeNumber, pin) {
 }
 
 function invalidateJudgeSessions(judgeNumber) {
-  for (const [sessionToken, session] of judgeSessions) {
-    if (session.judgeNumber === judgeNumber) judgeSessions.delete(sessionToken);
+  for (const [key, session] of judgeSessions) {
+    if (session.judgeNumber === judgeNumber) delete db.authSessions[key];
   }
+  save();
 }
 
 function cleanUrl(u) {
@@ -518,7 +545,7 @@ async function handleApi(req, res, url) {
       return send(res, 401, { error: 'Clave incorrecta.' });
     }
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, Date.now() + 8 * 3600 * 1000);
+    sessions.set(token, Date.now() + ADMIN_SESSION_MS);
     return send(res, 200, { token });
   }
 
@@ -541,7 +568,7 @@ async function handleApi(req, res, url) {
     }
     attempts.delete(`judge:${ip}`);
     const token = crypto.randomBytes(32).toString('hex');
-    judgeSessions.set(token, { judgeNumber, expiry: Date.now() + 8 * 3600 * 1000 });
+    judgeSessions.set(token, { judgeNumber, expiry: Date.now() + JUDGE_SESSION_MS });
     return send(res, 200, { token, judgeNumber });
   }
 
@@ -558,7 +585,7 @@ async function handleApi(req, res, url) {
     const judge = judgeSession(req);
     if (!judge) return send(res, 401, { error: 'La sesión del jurado venció. Ingresa de nuevo.' });
     let body;
-    try { body = JSON.parse(await readBody(req, 5000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
+    try { body = JSON.parse(await readBody(req, 12000)); } catch { return send(res, 400, { error: 'Solicitud inválida' }); }
     const projectId = str(body.projectId, 80);
     const project = db.projects.find(item => item.id === projectId);
     if (!project) return send(res, 404, { error: 'El proyecto ya no está disponible para calificar.' });
@@ -569,6 +596,7 @@ async function handleApi(req, res, url) {
       || body.scores.some(score => typeof score !== 'number' || !Number.isFinite(score) || score < 1 || score > 5)) {
       return send(res, 400, { error: 'Debes ingresar las 10 notas entre 1 y 5, aceptando decimales.' });
     }
+    const comments = typeof body.comments === 'string' ? body.comments.replace(/\r\n/g, '\n').trim().slice(0, 1500) : '';
     const scores = body.scores.map(score => Math.round(score * 100) / 100);
     const total = Math.round(scores.reduce((sum, score) => sum + score, 0) * 100) / 100;
     const evaluation = {
@@ -578,6 +606,7 @@ async function handleApi(req, res, url) {
       author: project.author,
       judgeNumber: judge.judgeNumber,
       scores,
+      comments,
       total,
       average: Math.round(total / RUBRIC_ITEMS.length * 100) / 100,
       submittedAt: new Date().toISOString()
@@ -671,6 +700,21 @@ async function handleApi(req, res, url) {
 
   if (url.pathname === '/api/evaluations' && method === 'GET') {
     return send(res, 200, db.evaluations, { 'Cache-Control': 'no-store' });
+  }
+
+  // Solo el administrador puede reiniciar calificaciones; lo retirado queda archivado.
+  if (url.pathname === '/api/admin/evaluations' && method === 'DELETE') {
+    const projectId = url.searchParams.get('projectId');
+    const judgeParam = url.searchParams.get('judgeNumber');
+    const judgeNumber = judgeParam === null ? null : Number(judgeParam);
+    if (judgeNumber !== null && !Number.isInteger(judgeNumber)) return send(res, 400, { error: 'Jurado inválido.' });
+    const matches = item => (!projectId || item.projectId === projectId) && (judgeNumber === null || item.judgeNumber === judgeNumber);
+    const removed = db.evaluations.filter(matches);
+    db.evaluations = db.evaluations.filter(item => !matches(item));
+    const resetAt = new Date().toISOString();
+    db.evaluationArchive.push(...removed.map(item => ({ ...item, resetAt })));
+    save();
+    return send(res, 200, { removed: removed.length });
   }
 
   if (url.pathname === '/api/content' && method === 'PUT') {

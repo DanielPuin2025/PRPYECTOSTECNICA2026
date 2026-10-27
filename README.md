@@ -8,7 +8,8 @@ Página web para las sustentaciones de proyectos de los estudiantes de la Técni
 - **Galería de Imágenes**: Sección para mostrar fotos de eventos y actividades
 - **Contenido Editable**: Todo el contenido del sitio es editable desde el panel de admin
 - **Sistema de Votación**: Los usuarios pueden calificar el logo de la técnica
-- **Calificación de proyectos**: Los jurados activos ingresan con PIN individual y califican 10 criterios de 1 a 5, con decimales
+- **Calificación de proyectos**: Los jurados activos ingresan con PIN individual y califican 10 criterios de 1 a 5, con decimales, y pueden añadir observaciones. Su sesión dura 24 h (se renueva con el uso, incluso tras reiniciar el servidor) y las notas se guardan como borrador en el dispositivo hasta enviarlas
+- **Reinicio de calificaciones**: Solo el administrador puede reiniciar todas las calificaciones, las de un proyecto o la de un jurado en un proyecto; lo retirado queda archivado en `data/db.json`. Las observaciones aparecen en pantalla, CSV y PDF
 - **Resultados y ranking**: El administrador consulta los promedios por jurado, el promedio final por proyecto y los cinco primeros lugares. El promedio usa todos los jurados activos, y un proyecto entra al ranking cuando todos ellos calificaron
 - **Exportación**: Descarga los resultados en CSV compatible con Excel o imprime/guarda el reporte como PDF
 - **Contador Regresivo**: Cuenta regresiva hasta el evento de sustentaciones
